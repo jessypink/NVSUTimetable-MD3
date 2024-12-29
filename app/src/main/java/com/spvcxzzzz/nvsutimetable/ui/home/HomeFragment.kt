@@ -1,15 +1,15 @@
 package com.spvcxzzzz.nvsutimetable.ui.home
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.CalendarView
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.datepicker.MaterialDatePicker
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.spvcxzzzz.nvsutimetable.R
 import com.spvcxzzzz.nvsutimetable.databinding.FragmentTimetableBinding
 import java.text.SimpleDateFormat
@@ -22,67 +22,99 @@ class HomeFragment : Fragment() {
     private var _binding: FragmentTimetableBinding? = null
     private val binding get() = _binding!!
 
+    // Переменная для хранения значения группы (номер группы)
+    private var groupNumber: String? = null
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-
-        val homeViewModel =
-            ViewModelProvider(this).get(HomeViewModel::class.java)
-
+        val homeViewModel = ViewModelProvider(this).get(HomeViewModel::class.java)
         _binding = FragmentTimetableBinding.inflate(inflater, container, false)
-        val root: View = binding.root
 
-        val view = inflater.inflate(R.layout.fragment_timetable, container, false)
+        // Установка текущей даты
+        binding.textViewDate.text = getCurrentFormattedDate()
 
-        // Связываем фрагмент с разметкой
-        val textViewDate: TextView = view.findViewById(R.id.textViewDate)
-        val btnSelectDate: Button = view.findViewById(R.id.btnSelectDate)
+        // Загрузка сохраненного номера группы
+        val sharedPreferences = requireContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        groupNumber = sharedPreferences.getString("group_number", null)
+        groupNumber?.let { binding.group.text = it }
 
-        val formattedDate: String = LocalDate.now().format(DateTimeFormatter.ofPattern("E, d MMMM", Locale.getDefault()))
-        textViewDate.text = formattedDate
-
-        // Обработчик клика по кнопке
-        btnSelectDate.setOnClickListener {
+        // Обработчик выбора даты
+        binding.btnSelectDate.setOnClickListener {
             showDatePicker { selectedDate ->
-                textViewDate.text = selectedDate // Установить выбранную дату в TextView
+                binding.textViewDate.text = selectedDate
             }
         }
 
-        return view
+        // Обработчик клика по номеру группы
+        binding.group.setOnClickListener { showNumberInputDialog(binding.group) }
+
+        return binding.root
     }
 
+    // Диалог для выбора даты через MaterialDatePicker
     private fun showDatePicker(onDateSelected: (String) -> Unit) {
-        val calendar = Calendar.getInstance()
-
-        // Текущая дата
-        val year = calendar.get(Calendar.YEAR)
-        val month = calendar.get(Calendar.MONTH)
-        val day = calendar.get(Calendar.DAY_OF_MONTH)
-
-        // Создаем MaterialDatePicker
         val datePicker = MaterialDatePicker.Builder.datePicker()
-            .setSelection(MaterialDatePicker.todayInUtcMilliseconds()) // Текущая дата
+            .setSelection(MaterialDatePicker.todayInUtcMilliseconds())
             .setTitleText("Выберите дату")
             .build()
 
-
-
         // Обработчик выбора даты
         datePicker.addOnPositiveButtonClickListener { selectedDate ->
-            val calendarSelected = Calendar.getInstance()
-            calendarSelected.timeInMillis = selectedDate
-            val formattedDate = formatDate(calendarSelected)
-            onDateSelected(formattedDate)
+            val calendarSelected = Calendar.getInstance().apply { timeInMillis = selectedDate }
+            onDateSelected(formatDate(calendarSelected))
         }
 
-        datePicker.show(childFragmentManager, datePicker.toString()) // Показываем MaterialDatePicker
+        datePicker.show(childFragmentManager, datePicker.toString())
     }
 
-    // Функция для форматирования даты
+
+    // Диалог для ввода/изменения номера группы
+    private fun showNumberInputDialog(targetTextView: TextView) {
+        val dialogView = layoutInflater.inflate(R.layout.input_group, null)
+        val numberInput = dialogView.findViewById<TextView>(R.id.numberInput)
+
+        numberInput.text = groupNumber
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Введите номер группы")
+            .setView(dialogView)
+            .setPositiveButton("Перейти") { _, _ ->
+                val input = numberInput.text.toString()
+                if (input.isNotEmpty()) {
+                    targetTextView.text = input
+                    groupNumber = input
+                    saveGroupNumberToPrefs(input)
+                }
+            }
+            .setNegativeButton("Отмена", null)
+            .show()
+    }
+
+    // Сохранение группы
+    private fun saveGroupNumberToPrefs(groupNumber: String) {
+        val sharedPreferences = requireContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        with(sharedPreferences.edit()) {
+            putString("group_number", groupNumber)
+            apply()
+        }
+    }
+
+    // Метод обновления TextView на текущую дату
+    fun updateDateToToday() {
+        binding.textViewDate.text = getCurrentFormattedDate()
+    }
+
+    // Получение текущей даты
+    private fun getCurrentFormattedDate(): String {
+        return LocalDate.now().format(DateTimeFormatter.ofPattern("E, d MMMM", Locale.getDefault()))
+    }
+
+    // Форматирование даты в виде строки
     private fun formatDate(calendar: Calendar): String {
-        val dateFormat = SimpleDateFormat("E, d MMMM", Locale.getDefault()) // Пример: Чт, 26 декабря
+        val dateFormat = SimpleDateFormat("E, d MMMM", Locale.getDefault())
         return dateFormat.format(calendar.time)
     }
 

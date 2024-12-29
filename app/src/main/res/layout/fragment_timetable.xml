@@ -7,7 +7,7 @@
     android:paddingLeft="38dp"
     android:paddingTop="38dp"
     android:paddingRight="38dp"
-    tools:context=".ui.dashboard.DashboardFragment">
+    tools:context=".ui.home.HomeFragment">
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnSelectDate"
@@ -15,6 +15,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
+        android:layout_marginTop="19dp"
         android:text="Выбрать дату"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -28,12 +29,13 @@
         android:textSize="34sp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView3" />
+        app:layout_constraintTop_toBottomOf="@+id/group" />
 
     <TextView
-        android:id="@+id/textView3"
+        android:id="@+id/group"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:clickable="true"
         android:text="Группа"
         android:textSize="34sp"
         android:textStyle="bold"

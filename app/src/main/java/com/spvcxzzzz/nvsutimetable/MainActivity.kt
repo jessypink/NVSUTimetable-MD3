@@ -12,8 +12,9 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.color.DynamicColors
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.spvcxzzzz.nvsutimetable.databinding.ActivityMainBinding
-
+import com.spvcxzzzz.nvsutimetable.ui.home.HomeFragment
 
 
 class MainActivity : AppCompatActivity() {
@@ -39,6 +40,20 @@ class MainActivity : AppCompatActivity() {
                 R.id.navigation_home, R.id.navigation_dashboard
             )
         )
+        // Получаем ссылку на FloatingActionButton
+        val fabToday: FloatingActionButton = findViewById(R.id.fab_today)
+
+        // Устанавливаем обработчик нажатия
+        fabToday.setOnClickListener {
+            val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment_activity_main)
+                    as? androidx.navigation.fragment.NavHostFragment
+            val currentFragment = navHostFragment?.childFragmentManager?.primaryNavigationFragment
+
+            if (currentFragment is HomeFragment) {
+                currentFragment.updateDateToToday()
+            }
+        }
+
         //setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
     }
