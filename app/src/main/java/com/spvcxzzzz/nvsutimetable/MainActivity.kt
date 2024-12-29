@@ -2,17 +2,18 @@ package com.spvcxzzzz.nvsutimetable
 
 import android.graphics.Color
 import android.os.Bundle
-import androidx.activity.compose.setContent
+import android.widget.Toast
+import androidx.activity.viewModels
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
-import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
-import com.google.android.material.color.DynamicColors
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.spvcxzzzz.nvsutimetable.databinding.ActivityMainBinding
 import com.spvcxzzzz.nvsutimetable.ui.home.HomeFragment
 
@@ -20,6 +21,7 @@ import com.spvcxzzzz.nvsutimetable.ui.home.HomeFragment
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,19 +42,12 @@ class MainActivity : AppCompatActivity() {
                 R.id.navigation_home, R.id.navigation_dashboard
             )
         )
-        // Получаем ссылку на FloatingActionButton
-        val fabToday: FloatingActionButton = findViewById(R.id.fab_today)
 
-        // Устанавливаем обработчик нажатия
-        fabToday.setOnClickListener {
-            val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment_activity_main)
-                    as? androidx.navigation.fragment.NavHostFragment
-            val currentFragment = navHostFragment?.childFragmentManager?.primaryNavigationFragment
+//        binding.navView.post {
+//            val navViewHeight = binding.navView.height
+//            println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" + navViewHeight)
+//        }
 
-//            if (currentFragment is HomeFragment) {
-//                currentFragment.updateDateToToday()
-//            }
-        }
 
         //setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)

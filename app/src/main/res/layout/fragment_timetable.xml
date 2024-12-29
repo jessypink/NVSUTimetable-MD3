@@ -1,68 +1,122 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingLeft="38dp"
-    android:paddingTop="38dp"
-    android:paddingRight="38dp"
     tools:context=".ui.home.HomeFragment">
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnSendJson"
-        style="@style/Widget.Material3.Button.TonalButton"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:text="отправить запрос"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnSelectDate" />
+    <!-- Основной контент внутри ConstraintLayout -->
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnSelectDate"
-        style="@style/Widget.Material3.Button.TonalButton"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_marginTop="19dp"
-        android:text="Выбрать дату"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textViewDate" />
-
-    <TextView
-        android:id="@+id/textViewDate"
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_today"
+        android:layout_marginRight="18dp"
+        android:layout_marginBottom="88dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="TextView"
-        android:textSize="34sp"
-        android:textStyle="bold"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/group" />
+        android:contentDescription="@string/fab_description"
+        android:src="@drawable/outline_today_24"
+        app:layout_anchor="@+id/constraintLayout"
+        app:layout_anchorGravity="end|bottom"
+        tools:layout_editor_absoluteX="301dp"
+        tools:layout_editor_absoluteY="259dp" />
 
-    <TextView
-        android:id="@+id/group"
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_group"
+        android:layout_marginRight="18dp"
+        android:layout_marginBottom="18dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:clickable="true"
-        android:text="Группа"
-        android:textSize="34sp"
-        android:textStyle="bold"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:contentDescription="@string/fab_description"
+        android:src="@drawable/outline_group_24"
+        app:layout_anchor="@+id/constraintLayout"
+        app:layout_anchorGravity="end|bottom" />
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerView"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/constraintLayout"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:padding="8dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnSendJson"
-        tools:listitem="@layout/item_timetable" />
+        android:layout_height="match_parent"
+        android:paddingLeft="38dp"
+        android:paddingTop="38dp"
+        android:paddingRight="38dp">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <LinearLayout
+            android:id="@+id/linearLayout"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <TextView
+                android:id="@+id/group"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:text="Группа"
+                android:textSize="34sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/textViewDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="TextView"
+            android:textSize="34sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/linearLayout" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="16dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textViewDate"
+            tools:listitem="@layout/item_timetable" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/no_disciplines_layout"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginTop="16dp"
+            android:visibility="invisible"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textViewDate">
+
+            <ImageView
+                android:id="@+id/imageView"
+                android:layout_width="165dp"
+                android:layout_height="147dp"
+                android:layout_marginTop="128dp"
+                android:src="@drawable/outline_king_bed_24"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:tint="?attr/colorOnSurfaceVariant" />
+
+            <TextView
+                android:id="@+id/textView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Занятий нет"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/imageView" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- FAB для выбора даты -->
+
+    <!-- FAB для выбора группы -->
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
