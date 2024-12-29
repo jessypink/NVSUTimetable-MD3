@@ -4,4 +4,6 @@
     <string name="title_search">Search</string>
     <string name="title_notifications">Notifications</string>
     <string name="fab_description">Вернуться к сегодняшней дате</string>
+    <string name="TypeTextView">Тип занятия</string>
+    <string name="NameTextView">Название дисциплины</string>
 </resources>

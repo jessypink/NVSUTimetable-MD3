@@ -10,6 +10,18 @@
     tools:context=".ui.home.HomeFragment">
 
     <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnSendJson"
+        style="@style/Widget.Material3.Button.TonalButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="отправить запрос"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btnSelectDate" />
+
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnSelectDate"
         style="@style/Widget.Material3.Button.TonalButton"
         android:layout_width="0dp"
@@ -41,5 +53,16 @@
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:padding="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btnSendJson"
+        tools:listitem="@layout/item_timetable" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

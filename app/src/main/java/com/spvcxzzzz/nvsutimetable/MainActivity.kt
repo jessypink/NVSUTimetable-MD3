@@ -49,9 +49,9 @@ class MainActivity : AppCompatActivity() {
                     as? androidx.navigation.fragment.NavHostFragment
             val currentFragment = navHostFragment?.childFragmentManager?.primaryNavigationFragment
 
-            if (currentFragment is HomeFragment) {
-                currentFragment.updateDateToToday()
-            }
+//            if (currentFragment is HomeFragment) {
+//                currentFragment.updateDateToToday()
+//            }
         }
 
         //setupActionBarWithNavController(navController, appBarConfiguration)
