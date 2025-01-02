@@ -14,7 +14,7 @@ import com.spvcxzzzz.nvsutimetable.R
 import com.spvcxzzzz.nvsutimetable.model.Timetable
 import kotlinx.coroutines.delay
 
-class TimetableAdapter(private val timetableList: List<Timetable>, private val isEmpty: Boolean) : RecyclerView.Adapter<TimetableAdapter.TimetableViewHolder>() {
+class TimetableAdapter(private var timetableList: List<Timetable>, private val isEmpty: Boolean) : RecyclerView.Adapter<TimetableAdapter.TimetableViewHolder>() {
 
     inner class TimetableViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val discipline: TextView = itemView.findViewById(R.id.textDiscipline)
@@ -31,14 +31,11 @@ class TimetableAdapter(private val timetableList: List<Timetable>, private val i
         return TimetableViewHolder(view)
     }
 
+
     override fun onBindViewHolder(holder: TimetableViewHolder, position: Int) {
         if (isEmpty) {
             // Если список пуст, скрываем timeHolder
             holder.itemMainLayout.visibility = View.GONE
-//            holder.timeHolder.visibility = View.GONE
-//            holder.argsScrollView.visibility = View.GONE
-//            holder.discipline.text = "Занятий нет"
-//            holder.type.visibility = View.GONE  // скрыть тип занятия, если нужно
         } else {
             val timetable = timetableList[position]
 
@@ -87,8 +84,6 @@ class TimetableAdapter(private val timetableList: List<Timetable>, private val i
 
 
             holder.itemMainLayout.visibility = View.VISIBLE
-//            holder.timeHolder.visibility = View.VISIBLE
-//            holder.argsScrollView.visibility = View.VISIBLE// показываем timeHolder
         }
     }
 

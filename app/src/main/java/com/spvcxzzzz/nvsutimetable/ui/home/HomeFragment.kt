@@ -1,5 +1,6 @@
 package com.spvcxzzzz.nvsutimetable.ui.home
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
@@ -28,6 +29,8 @@ import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.ZoneId
 import java.util.*
+import android.view.GestureDetector
+import android.view.MotionEvent
 
 
 class HomeFragment : Fragment() {
@@ -40,7 +43,9 @@ class HomeFragment : Fragment() {
     private var selectedGroup: String? = null
     private var selectedDateForApi: String? = null
 
+    private lateinit var gestureDetector: GestureDetector
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -86,16 +91,48 @@ class HomeFragment : Fragment() {
             }
         }
 
+        // Инициализация GestureDetector здесь, после того как view привязана
+        gestureDetector = GestureDetector(requireContext(), object : GestureDetector.SimpleOnGestureListener() {
+            override fun onFling(
+                e1: MotionEvent?,
+                e2: MotionEvent,
+                velocityX: Float,
+                velocityY: Float
+            ): Boolean {
+                val threshold = 300 // минимальное расстояние для свайпа
+                val velocityThreshold = 100 // минимальная скорость для свайпа
+
+                if (e1 == null || e2 == null) return false
+
+                // Вычисляем разницу по горизонтали
+                val diffX = e2.x - e1.x
+
+                // Свайп вправо (убавить день)
+                if (diffX > threshold && Math.abs(velocityX) > velocityThreshold) {
+                    changeDate(-1) // Уменьшаем дату
+                }
+                // Свайп влево (прибавить день)
+                else if (diffX < -threshold && Math.abs(velocityX) > velocityThreshold) {
+                    changeDate(1) // Прибавляем дату
+                }
+
+                return true // Возвращаем true для обработки свайпа
+            }
+        })
+
+        binding.constraintLayout.setOnTouchListener { _, event ->
+            gestureDetector.onTouchEvent(event)
+            true
+        }
+
+        binding.recyclerView.setOnTouchListener { _, event ->
+            gestureDetector.onTouchEvent(event)
+            true
+        }
+
 
         return binding.root
     }
-
-    fun setFabGroupMargin(marginBottom: Float) {
-        val layoutParams = binding.fabGroup.layoutParams as ViewGroup.MarginLayoutParams
-        layoutParams.bottomMargin = marginBottom.toInt()
-        binding.fabGroup.layoutParams = layoutParams
-    }
-
 
     private fun initClickListeners() {
         // Открытие DatePicker для выбора даты
@@ -109,16 +146,53 @@ class HomeFragment : Fragment() {
         // Открытие диалога для ввода номера группы
         binding.group.setOnClickListener { showNumberInputDialog(binding.group) }
 
+        binding.leftLayoutForTap.setOnClickListener{
+            changeDate(-1)
+        }
 
-        // Отправка запроса на сервер
-//        binding.btnSendJson.setOnClickListener {
-//            sendJsonRequest()
-//        }
+        binding.rightLayoutForTap.setOnClickListener{
+            changeDate(1)
+        }
+    }
+
+    private fun changeDate(dayOffset: Int) {
+        // Форматируем строку в объект Date
+        val dateFormat = SimpleDateFormat("dd_MM_yyyy", Locale.getDefault())
+        val date = dateFormat.parse(selectedDateForApi)
+
+        // Создаем объект Calendar и устанавливаем его на дату
+        val calendar = Calendar.getInstance()
+        calendar.time = date
+
+        // Прибавляем один день
+        calendar.add(Calendar.DAY_OF_YEAR, dayOffset)
+
+        // Получаем новую дату после прибавления одного дня
+        val newDate = calendar.time
+
+        // Форматируем новую дату обратно в строку
+        val newFormattedDate = dateFormat.format(newDate)
+
+        binding.textViewDate.setText(formatDateForDisplay(newDate))
+        selectedDateForApi = newFormattedDate
+        sendJsonRequest()
     }
 
     private fun showDatePicker(onDateSelected: (String, String) -> Unit) {
+        // Преобразуем выбранную дату в миллисекунды, если она существует
+        val initialSelection = selectedDateForApi?.let {
+            // Преобразуем строку "dd_MM_yyyy" в объект Date
+            val dateFormat = SimpleDateFormat("dd_MM_yyyy", Locale.getDefault())
+            // Устанавливаем временную зону UTC
+            dateFormat.timeZone = TimeZone.getTimeZone("UTC")
+            val date = dateFormat.parse(it)
+
+            // Если дата корректно парсится, возвращаем её в миллисекундах, иначе выбираем сегодняшнюю дату
+            date?.time ?: MaterialDatePicker.todayInUtcMilliseconds()
+        } ?: MaterialDatePicker.todayInUtcMilliseconds()  // Если дата не выбрана, выбираем сегодняшнюю
+
         val datePicker = MaterialDatePicker.Builder.datePicker()
-            .setSelection(MaterialDatePicker.todayInUtcMilliseconds())
+            .setSelection(initialSelection)  // Устанавливаем начальную выбранную дату
             .setTitleText("Выберите дату")
             .build()
 
@@ -130,8 +204,9 @@ class HomeFragment : Fragment() {
             sendJsonRequest()
         }
 
-            datePicker.show(childFragmentManager, datePicker.toString())
+        datePicker.show(childFragmentManager, datePicker.toString())
     }
+
 
     private fun showNumberInputDialog(targetTextView: TextView) {
         val dialogView = layoutInflater.inflate(R.layout.input_group, null)
@@ -236,7 +311,6 @@ class HomeFragment : Fragment() {
     }
 
     private fun parseTimetableResponse(jsonResponse: String?): List<Timetable> {
-
         val noTimetableLayout = binding.noDisciplinesLayout
         val lessonsRecyclerView = binding.recyclerView
 
