@@ -21,6 +21,7 @@ import com.google.gson.reflect.TypeToken
 import com.spvcxzzzz.nvsutimetable.R
 import com.spvcxzzzz.nvsutimetable.databinding.FragmentTimetableBinding
 import com.spvcxzzzz.nvsutimetable.model.Timetable
+import kotlinx.coroutines.*
 import okhttp3.*
 import java.io.IOException
 import java.text.SimpleDateFormat
@@ -129,7 +130,7 @@ class HomeFragment : Fragment() {
             sendJsonRequest()
         }
 
-        datePicker.show(childFragmentManager, datePicker.toString())
+            datePicker.show(childFragmentManager, datePicker.toString())
     }
 
     private fun showNumberInputDialog(targetTextView: TextView) {
@@ -162,6 +163,24 @@ class HomeFragment : Fragment() {
     private fun formatDateForApi(date: Date): String {
         val dateFormat = SimpleDateFormat("dd_MM_yyyy", Locale.getDefault())
         return dateFormat.format(date)
+    }
+
+    private fun getWeekDates(selectedDate: Calendar): List<String> {
+        val dates = mutableListOf<String>()
+        val calendar = selectedDate.clone() as Calendar
+
+        // Переходим к началу недели (понедельник)
+        while (calendar.get(Calendar.DAY_OF_WEEK) != Calendar.MONDAY) {
+            calendar.add(Calendar.DAY_OF_MONTH, -1)
+        }
+
+        // Добавляем дни недели, кроме воскресенья
+        for (i in 0..5) {
+            dates.add(formatDateForApi(calendar.time))
+            calendar.add(Calendar.DAY_OF_MONTH, 1)
+        }
+
+        return dates
     }
 
     private fun sendJsonRequest() {
@@ -221,7 +240,7 @@ class HomeFragment : Fragment() {
         val noTimetableLayout = binding.noDisciplinesLayout
         val lessonsRecyclerView = binding.recyclerView
 
-        // Функция для плавного скрытия layout
+        // Функция для плавного скрытия layout при отсутствии занятий
         fun hideNoTimetableLayout() {
             noTimetableLayout.animate()
                 .alpha(0f)  // Уменьшаем прозрачность до 0
@@ -237,7 +256,7 @@ class HomeFragment : Fragment() {
                 .setDuration(200)
         }
 
-        // Функция для плавного отображения layout
+        // Функция для плавного отображения layout если занятия есть
         fun showNoTimetableLayout() {
             noTimetableLayout.visibility = View.VISIBLE  // Делаем layout видимым
             noTimetableLayout.alpha = 0f  // Устанавливаем начальную прозрачность
@@ -255,7 +274,7 @@ class HomeFragment : Fragment() {
 
         if (jsonResponse.isNullOrEmpty()) {
             showNoTimetableLayout()  // Показываем layout "Занятий нет"
-            return listOf(Timetable("Занятий нет", "", "", ""))
+            return listOf(Timetable("Занятий нет", "", "", "", "", "", ""))
         }
 
         return try {
@@ -265,7 +284,7 @@ class HomeFragment : Fragment() {
 
             if (timetableList.isEmpty()) {
                 showNoTimetableLayout()  // Показываем layout "Занятий нет"
-                listOf(Timetable("", "", null, null))
+                listOf(Timetable("", "", null, null, "", "", ""))
             } else {
                 hideNoTimetableLayout()  // Скрываем layout "Занятий нет"
                 timetableList
@@ -274,11 +293,9 @@ class HomeFragment : Fragment() {
             Toast.makeText(requireContext(), "Ошибка при парсинге данных: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
             e.printStackTrace()
             showNoTimetableLayout()  // Показываем layout "Занятий нет" при ошибке
-            listOf(Timetable("Занятий нет", "", null, null))
+            listOf(Timetable("Занятий нет", "", null, null, "", "", ""))
         }
     }
-
-
 
     private fun displayTimetable(timetableList: List<Timetable>) {
         Log.d("TimetableAdapter", "Передаем в адаптер список с размером: ${timetableList.size}")

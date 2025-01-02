@@ -2,6 +2,7 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/ItemLayout"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="6dp">
@@ -28,14 +29,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:text="TextView" /> <!-- Синий фон с закругленными краями -->
+                android:text="Начало" /> <!-- Синий фон с закругленными краями -->
 
             <TextView
                 android:id="@+id/EndOfLession"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:text="TextView" /> <!-- Красный фон с закругленными краями -->
+                android:text="Конец" /> <!-- Красный фон с закругленными краями -->
         </LinearLayout>
 
         <LinearLayout
@@ -57,6 +58,29 @@
                 android:layout_height="wrap_content"
                 android:text="@string/TypeTextView"
                 android:textSize="14sp" />
+
+            <com.google.android.flexbox.FlexboxLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:flexWrap="wrap"
+                app:justifyContent="flex_start">
+
+                <TextView
+                    android:id="@+id/TextView_Cabinet"
+                    style="@style/PseudoChips"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:maxLines="1"
+                    android:text="кабинет - корпус" />
+
+                <TextView
+                    android:id="@+id/TextView_Lector"
+                    style="@style/PseudoChips"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:maxLines="1"
+                    android:text="Фамилия И. О." />
+            </com.google.android.flexbox.FlexboxLayout>
 
         </LinearLayout>
     </LinearLayout>
