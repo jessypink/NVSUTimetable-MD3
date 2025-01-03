@@ -31,6 +31,7 @@ import java.time.ZoneId
 import java.util.*
 import android.view.GestureDetector
 import android.view.MotionEvent
+import com.google.android.material.search.SearchBar
 
 
 class HomeFragment : Fragment() {
@@ -67,7 +68,7 @@ class HomeFragment : Fragment() {
         // Загрузка номера группы из SharedPreferences
         val sharedPreferences = requireContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
         selectedGroup = sharedPreferences.getString("group_number", null)
-        selectedGroup?.let { binding.group.text = it }
+        selectedGroup?.let { binding.group.hint = it }
 
         sendJsonRequest()
 
@@ -78,10 +79,10 @@ class HomeFragment : Fragment() {
         binding.recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
         // Устанавливаем обработчики для FAB
-        binding.fabGroup.setOnClickListener {
-            // Вызов функции для выбора группы
-            showNumberInputDialog(binding.group)
-        }
+//        binding.fabGroup.setOnClickListener {
+//            // Вызов функции для выбора группы
+//            showNumberInputDialog(binding.group)
+//        }
 
 //        binding.fabToday.setOnClickListener {
 //            // Вызов функции выбора даты
@@ -246,7 +247,7 @@ class HomeFragment : Fragment() {
 //    }
 
 
-    private fun showNumberInputDialog(targetTextView: TextView) {
+    private fun showNumberInputDialog(targetTextView: SearchBar) {
         val dialogView = layoutInflater.inflate(R.layout.input_group, null)
         val numberInput = dialogView.findViewById<TextView>(R.id.numberInput)
 
@@ -257,7 +258,7 @@ class HomeFragment : Fragment() {
             .setPositiveButton("Перейти") { _, _ ->
                 val input = numberInput.text.toString()
                 if (input.isNotEmpty()) {
-                    targetTextView.text = input
+                    targetTextView.hint = input
                     selectedGroup = input
                     saveGroupNumberToPrefs(input)
                     sendJsonRequest()
