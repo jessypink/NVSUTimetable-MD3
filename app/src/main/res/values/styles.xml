@@ -1,10 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="PseudoChips">
-        <item name="android:background">@drawable/rounded_background_blue</item>
+        <item name="android:background">@drawable/rounded_background_attrs</item>
         <item name="android:paddingLeft">10dp</item>
         <item name="android:paddingRight">10dp</item>
+        <item name="android:paddingTop">7dp</item>
+        <item name="android:paddingBottom">7dp</item>
         <item name="android:layout_marginRight">4dp</item>
         <item name="android:layout_marginTop">4dp</item>
+    </style>
+    <style name="LessionItem">
+        <item name="android:background">@drawable/rounded_background_lession</item>
+
     </style>
 </resources>

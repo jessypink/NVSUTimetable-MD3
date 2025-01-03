@@ -6,14 +6,21 @@
     android:layout_height="match_parent"
     android:padding="16dp">
 
-    <EditText
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/textInputLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        style="@style/ThemeOverlay.Material3.MaterialTimePicker.Display.TextInputEditText"
+        app:hintAnimationEnabled="true">
+
+    <com.google.android.material.textfield.TextInputEditText
         android:id="@+id/numberInput"
         android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:hint="Enter a number"
+        android:layout_height="wrap_content"
         android:inputType="number"
-        android:maxLines="1"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:hint="Введите номер группы"
+        android:padding="16dp"
+        android:textSize="16sp" />
+
+</com.google.android.material.textfield.TextInputLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

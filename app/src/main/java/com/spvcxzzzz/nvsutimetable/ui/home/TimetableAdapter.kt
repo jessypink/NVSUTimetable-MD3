@@ -24,6 +24,7 @@ class TimetableAdapter(private var timetableList: List<Timetable>, private val i
         val itemMainLayout: androidx.constraintlayout.widget.ConstraintLayout = itemView.findViewById(R.id.ItemLayout)
         val cabinet: TextView = itemView.findViewById(R.id.TextView_Cabinet)
         val prepod: TextView = itemView.findViewById(R.id.TextView_Lector)
+        val subgroup: TextView = itemView.findViewById(R.id.TextView_Subgroup)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TimetableViewHolder {
@@ -47,6 +48,11 @@ class TimetableAdapter(private var timetableList: List<Timetable>, private val i
                 }
             }
 
+            if (timetable.SUBGRUP != null)  {
+                holder.subgroup.text = timetable.GRUP + "/" + timetable.SUBGRUP
+            } else {
+                holder.subgroup.visibility = View.GONE
+            }
 
             holder.discipline.text = timetable.DISCIPLINE
             holder.type.text = timetable.VID
@@ -72,6 +78,7 @@ class TimetableAdapter(private var timetableList: List<Timetable>, private val i
             val endTime = timetable.TIMEZAN_END?.takeIf { it.isNotEmpty() }?.substring(0, 5)
             val startTime = timetable.TIMEZAN?.takeIf { it.isNotEmpty() }?.substring(0, 5)
             if (startTime.isNullOrEmpty()) {
+                holder.subgroup.visibility = View.GONE
                 holder.prepod.visibility = View.GONE
                 holder.cabinet.visibility = View.GONE
                 holder.startOfLesson.visibility = View.GONE

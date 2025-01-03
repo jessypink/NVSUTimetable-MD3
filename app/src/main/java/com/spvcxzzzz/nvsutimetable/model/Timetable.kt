@@ -7,5 +7,7 @@ data class Timetable(
     val TIMEZAN_END: String? = null,
     val AUD: String,
     val Building: String,
-    val TEACHER: String
+    val TEACHER: String,
+    val SUBGRUP: String,
+    val GRUP: String
 )

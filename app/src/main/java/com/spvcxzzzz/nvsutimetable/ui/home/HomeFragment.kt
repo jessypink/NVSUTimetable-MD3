@@ -83,13 +83,13 @@ class HomeFragment : Fragment() {
             showNumberInputDialog(binding.group)
         }
 
-        binding.fabToday.setOnClickListener {
-            // Вызов функции выбора даты
-            showDatePicker { selectedDate, formattedDateForApi ->
-                binding.textViewDate.text = selectedDate
-                selectedDateForApi = formattedDateForApi
-            }
-        }
+//        binding.fabToday.setOnClickListener {
+//            // Вызов функции выбора даты
+//            showDatePicker { selectedDate, formattedDateForApi ->
+//                binding.textViewDate.text = selectedDate
+//                selectedDateForApi = formattedDateForApi
+//            }
+//        }
 
         // Инициализация GestureDetector здесь, после того как view привязана
         gestureDetector = GestureDetector(requireContext(), object : GestureDetector.SimpleOnGestureListener() {
@@ -130,28 +130,61 @@ class HomeFragment : Fragment() {
             true
         }
 
-
         return binding.root
     }
 
     private fun initClickListeners() {
-        // Открытие DatePicker для выбора даты
-        binding.fabToday.setOnClickListener {
-            showDatePicker { selectedDate, formattedDateForApi ->
-                binding.textViewDate.text = selectedDate
+            binding.fabPickToday.setOnClickListener {
+                val todayMillis = Calendar.getInstance().timeInMillis
+                binding.calendarView2.setDate(todayMillis, true, true)
+
+                val calendar = Calendar.getInstance()
+
+                // Форматируем дату для отображения и API
+                val formattedDateForDisplay = formatDateForDisplay(calendar.time)
+                val formattedDateForApi = formatDateForApi(calendar.time)
+
                 selectedDateForApi = formattedDateForApi
+                if (binding.textViewDate.text == formattedDateForDisplay) {
+//                    Toast.makeText(requireContext(), "без запроса", Toast.LENGTH_SHORT).show()
+                } else {
+                    binding.textViewDate.text = formattedDateForDisplay
+                    sendJsonRequest()
+                }
+
             }
-        }
+
+        // Открытие DatePicker для выбора даты
+//        binding.fabToday.setOnClickListener {
+//            showDatePicker { selectedDate, formattedDateForApi ->
+//                binding.textViewDate.text = selectedDate
+//                selectedDateForApi = formattedDateForApi
+//            }
+//        }
 
         // Открытие диалога для ввода номера группы
         binding.group.setOnClickListener { showNumberInputDialog(binding.group) }
 
-        binding.leftLayoutForTap.setOnClickListener{
-            changeDate(-1)
-        }
+        binding.calendarView2.setOnDateChangeListener { view, year, month, dayOfMonth ->
+            // Создаём объект Calendar
+            val calendar = Calendar.getInstance().apply {
+                set(year, month, dayOfMonth)
+            }
 
-        binding.rightLayoutForTap.setOnClickListener{
-            changeDate(1)
+            // Получаем количество миллисекунд, чтобы использовать как в ModalDatePicker
+            val selectedDateMillis = calendar.timeInMillis
+
+            // Форматируем дату для отображения и API
+            val formattedDateForDisplay = formatDateForDisplay(calendar.time)
+            val formattedDateForApi = formatDateForApi(calendar.time)
+
+            selectedDateForApi = formattedDateForApi
+            if (binding.textViewDate.text == formattedDateForDisplay) {
+//                Toast.makeText(requireContext(), "без запроса", Toast.LENGTH_SHORT).show()
+            } else {
+                binding.textViewDate.text = formattedDateForDisplay
+                sendJsonRequest()
+            }
         }
     }
 
@@ -175,47 +208,51 @@ class HomeFragment : Fragment() {
 
         binding.textViewDate.setText(formatDateForDisplay(newDate))
         selectedDateForApi = newFormattedDate
+
+        val timeInMillis: Long = newDate.time // Преобразуем Date в long
+
+        binding.calendarView2.date = timeInMillis
+
         sendJsonRequest()
     }
 
-    private fun showDatePicker(onDateSelected: (String, String) -> Unit) {
-        // Преобразуем выбранную дату в миллисекунды, если она существует
-        val initialSelection = selectedDateForApi?.let {
-            // Преобразуем строку "dd_MM_yyyy" в объект Date
-            val dateFormat = SimpleDateFormat("dd_MM_yyyy", Locale.getDefault())
-            // Устанавливаем временную зону UTC
-            dateFormat.timeZone = TimeZone.getTimeZone("UTC")
-            val date = dateFormat.parse(it)
-
-            // Если дата корректно парсится, возвращаем её в миллисекундах, иначе выбираем сегодняшнюю дату
-            date?.time ?: MaterialDatePicker.todayInUtcMilliseconds()
-        } ?: MaterialDatePicker.todayInUtcMilliseconds()  // Если дата не выбрана, выбираем сегодняшнюю
-
-        val datePicker = MaterialDatePicker.Builder.datePicker()
-            .setSelection(initialSelection)  // Устанавливаем начальную выбранную дату
-            .setTitleText("Выберите дату")
-            .build()
-
-        datePicker.addOnPositiveButtonClickListener { selectedDateMillis ->
-            val calendarSelected = Calendar.getInstance().apply { timeInMillis = selectedDateMillis }
-            val formattedDateForDisplay = formatDateForDisplay(calendarSelected.time)
-            val formattedDateForApi = formatDateForApi(calendarSelected.time)
-            onDateSelected(formattedDateForDisplay, formattedDateForApi)
-            sendJsonRequest()
-        }
-
-        datePicker.show(childFragmentManager, datePicker.toString())
-    }
+//    private fun showDatePicker(onDateSelected: (String, String) -> Unit) {
+//        // Преобразуем выбранную дату в миллисекунды, если она существует
+//        val initialSelection = selectedDateForApi?.let {
+//            // Преобразуем строку "dd_MM_yyyy" в объект Date
+//            val dateFormat = SimpleDateFormat("dd_MM_yyyy", Locale.getDefault())
+//            // Устанавливаем временную зону UTC
+//            dateFormat.timeZone = TimeZone.getTimeZone("UTC")
+//            val date = dateFormat.parse(it)
+//
+//            // Если дата корректно парсится, возвращаем её в миллисекундах, иначе выбираем сегодняшнюю дату
+//            date?.time ?: MaterialDatePicker.todayInUtcMilliseconds()
+//        } ?: MaterialDatePicker.todayInUtcMilliseconds()  // Если дата не выбрана, выбираем сегодняшнюю
+//
+//        val datePicker = MaterialDatePicker.Builder.datePicker()
+//            .setSelection(initialSelection)  // Устанавливаем начальную выбранную дату
+//            .setTitleText("Выберите дату")
+//            .build()
+//
+//        datePicker.addOnPositiveButtonClickListener { selectedDateMillis ->
+//            val calendarSelected = Calendar.getInstance().apply { timeInMillis = selectedDateMillis }
+//            val formattedDateForDisplay = formatDateForDisplay(calendarSelected.time)
+//            val formattedDateForApi = formatDateForApi(calendarSelected.time)
+//            onDateSelected(formattedDateForDisplay, formattedDateForApi)
+//            sendJsonRequest()
+//        }
+//
+//        datePicker.show(childFragmentManager, datePicker.toString())
+//    }
 
 
     private fun showNumberInputDialog(targetTextView: TextView) {
         val dialogView = layoutInflater.inflate(R.layout.input_group, null)
         val numberInput = dialogView.findViewById<TextView>(R.id.numberInput)
 
-        numberInput.text = selectedGroup
+//        numberInput.text = selectedGroup
 
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Введите номер группы")
             .setView(dialogView)
             .setPositiveButton("Перейти") { _, _ ->
                 val input = numberInput.text.toString()
@@ -224,9 +261,10 @@ class HomeFragment : Fragment() {
                     selectedGroup = input
                     saveGroupNumberToPrefs(input)
                     sendJsonRequest()
+                } else {
+                    Toast.makeText(requireContext(), "Вы не ввели номер группы", Toast.LENGTH_SHORT).show()
                 }
             }
-            .setNegativeButton("Отмена", null)
             .show()
     }
 
@@ -348,7 +386,7 @@ class HomeFragment : Fragment() {
 
         if (jsonResponse.isNullOrEmpty()) {
             showNoTimetableLayout()  // Показываем layout "Занятий нет"
-            return listOf(Timetable("Занятий нет", "", "", "", "", "", ""))
+            return listOf(Timetable("Занятий нет", "", "", "", "", "", "", "", ""))
         }
 
         return try {
@@ -358,7 +396,7 @@ class HomeFragment : Fragment() {
 
             if (timetableList.isEmpty()) {
                 showNoTimetableLayout()  // Показываем layout "Занятий нет"
-                listOf(Timetable("", "", null, null, "", "", ""))
+                listOf(Timetable("", "", null, null, "", "", "", "", ""))
             } else {
                 hideNoTimetableLayout()  // Скрываем layout "Занятий нет"
                 timetableList
@@ -367,7 +405,7 @@ class HomeFragment : Fragment() {
             Toast.makeText(requireContext(), "Ошибка при парсинге данных: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
             e.printStackTrace()
             showNoTimetableLayout()  // Показываем layout "Занятий нет" при ошибке
-            listOf(Timetable("Занятий нет", "", null, null, "", "", ""))
+            listOf(Timetable("Занятий нет", "", null, null, "", "", "", "", ""))
         }
     }
 
