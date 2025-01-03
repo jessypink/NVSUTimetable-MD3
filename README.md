@@ -1,2 +1,2 @@
 m3 styled timetable app
-![Screenshot_20241230-045227](https://github.com/user-attachments/assets/72dea362-b952-42a7-8d12-d74835152e6c)
+![IMG_20250103_073005](https://github.com/user-attachments/assets/69f11b9e-ceb9-4097-967a-9cc26eb4479c)
