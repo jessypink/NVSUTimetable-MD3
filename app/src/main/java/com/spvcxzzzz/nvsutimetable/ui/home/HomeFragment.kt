@@ -74,8 +74,18 @@ class HomeFragment : Fragment() {
             binding.group.updatePadding(right = 20.dpToPx())
         }
 
+        var isWeekTimetableView = sharedPreferences.getBoolean("week_timetable_view", false)
 
-        sendJsonRequest()
+        if (!sharedPreferences.contains("week_timetable_view")) {
+            // Если ключ ещ не существует
+            val sharedPreferences1 = requireContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+            with(sharedPreferences.edit()) {
+                putBoolean("week_timetable_view", false)
+                apply()
+            }
+        }
+
+        SendRequestDayOrWeek()
 
         // Инициализация обработчиков кликов
         initClickListeners()
@@ -159,7 +169,7 @@ class HomeFragment : Fragment() {
 //                    Toast.makeText(requireContext(), "без запроса", Toast.LENGTH_SHORT).show()
                 } else {
                     binding.textViewDate.text = formattedDateForDisplay
-                    sendJsonRequest()
+                    SendRequestDayOrWeek()
                 }
 
             }
@@ -193,7 +203,7 @@ class HomeFragment : Fragment() {
 //                Toast.makeText(requireContext(), "без запроса", Toast.LENGTH_SHORT).show()
             } else {
                 binding.textViewDate.text = formattedDateForDisplay
-                sendJsonRequest()
+                SendRequestDayOrWeek()
             }
         }
     }
@@ -223,7 +233,7 @@ class HomeFragment : Fragment() {
 
         binding.calendarView2.date = timeInMillis
 
-        sendJsonRequest()
+        SendRequestDayOrWeek()
     }
 
     //Модал DatePicker, неактуален
@@ -271,7 +281,7 @@ class HomeFragment : Fragment() {
                     targetTextView.hint = input
                     selectedGroup = input
                     saveGroupNumberToPrefs(input)
-                    sendJsonRequest()
+                    SendRequestDayOrWeek()
                     binding.group.updatePadding(right = 20.dpToPx())
                 } else {
                     Toast.makeText(requireContext(), "Вы не ввели номер группы", Toast.LENGTH_SHORT).show()
@@ -421,6 +431,72 @@ class HomeFragment : Fragment() {
         }
     }
 
+    //Вычисление даты понедельника если чекнут расписание на неделю
+    private fun getMondayOfWeek(selectedDate: String): String {
+        val sdf = SimpleDateFormat("dd_MM_yyyy", Locale.getDefault())
+        val date = sdf.parse(selectedDate)
+        val calendar = Calendar.getInstance()
+        calendar.time = date
+        calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)  // Устанавливаем на понедельник
+        return sdf.format(calendar.time)
+    }
+
+    //Создание реквеста если чекнут расписание на неделю
+    private fun sendWeekJsonRequest() {
+        val group = selectedGroup ?: run {
+            Toast.makeText(requireContext(), "Введите номер группы", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val date = selectedDateForApi ?: run {
+            Toast.makeText(requireContext(), "Выберите дату", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Вычисляем понедельник для выбранной недели
+        val mondayDate = getMondayOfWeek(date)
+        val client = OkHttpClient()
+
+        val timetableList = mutableListOf<Timetable>()
+        val daysOfWeek = arrayOf(mondayDate, getNextDate(mondayDate, 1), getNextDate(mondayDate, 2), getNextDate(mondayDate, 3), getNextDate(mondayDate, 4), getNextDate(mondayDate, 5), getNextDate(mondayDate, 6))
+
+        // Отправляем запросы для каждого дня недели
+        for (day in daysOfWeek) {
+            val url = "http://timetable.nvsuedu.ru/tm/index.php/json?&group=$group&date=$day"
+            val request = Request.Builder().url(url).build()
+            client.newCall(request).enqueue(object : Callback {
+                override fun onResponse(call: Call, response: Response) {
+                    if (response.isSuccessful) {
+                        val jsonResponse = response.body?.string()
+                        activity?.runOnUiThread {
+                            val timetableForDay = parseTimetableResponse(jsonResponse)
+                            timetableList.addAll(timetableForDay) // Добавляем данные за день в общий список
+                            displayTimetable(timetableList)
+                        }
+                    } else {
+                        activity?.runOnUiThread {
+                            Toast.makeText(requireContext(), "Ошибка при запросе", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+
+                override fun onFailure(call: Call, e: IOException) {
+                    activity?.runOnUiThread {
+                        Toast.makeText(requireContext(), "Ошибка сети: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            })
+        }
+    }
+
+    private fun getNextDate(date: String, daysToAdd: Int): String {
+        val sdf = SimpleDateFormat("dd_MM_yyyy", Locale.getDefault())
+        val calendar = Calendar.getInstance()
+        calendar.time = sdf.parse(date)
+        calendar.add(Calendar.DATE, daysToAdd)
+        return sdf.format(calendar.time)
+    }
+
     private fun displayTimetable(timetableList: List<Timetable>) {
         Log.d("TimetableAdapter", "Передаем в адаптер список с размером: ${timetableList.size}")
 
@@ -430,6 +506,21 @@ class HomeFragment : Fragment() {
         // Передаем флаг в адаптер
         val adapter = TimetableAdapter(timetableList, isEmpty)
         binding.recyclerView.adapter = adapter
+    }
+
+    fun SendRequestDayOrWeek() {
+        // Получаем SharedPreferences
+        val sharedPreferences = requireContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+
+        // Получаем значение по ключу "week_timetable_view" (по умолчанию false)
+        val isWeekViewEnabled = sharedPreferences.getBoolean("week_timetable_view", false)
+
+        // В зависимости от значения вызываем нужную функцию
+        if (isWeekViewEnabled) {
+            sendWeekJsonRequest() // Если week_timetable_view = true
+        } else {
+            sendJsonRequest() // Если week_timetable_view = false
+        }
     }
 
     override fun onDestroyView() {
