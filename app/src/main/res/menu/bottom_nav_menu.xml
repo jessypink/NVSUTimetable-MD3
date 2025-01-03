@@ -6,9 +6,9 @@
         android:icon="@drawable/outline_calendar_month_24"
         android:title="Расписание" />
 
-<!--    <item-->
-<!--        android:id="@+id/navigation_dashboard"-->
-<!--        android:icon="@drawable/baseline_search_24"-->
-<!--        android:title="Группа" />-->
+    <item
+        android:id="@+id/navigation_dashboard"
+        android:icon="@drawable/cog_outline"
+        android:title="Настройки" />
 
 </menu>

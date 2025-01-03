@@ -31,6 +31,7 @@ import java.time.ZoneId
 import java.util.*
 import android.view.GestureDetector
 import android.view.MotionEvent
+import androidx.core.view.updatePadding
 import com.google.android.material.search.SearchBar
 
 
@@ -69,6 +70,10 @@ class HomeFragment : Fragment() {
         val sharedPreferences = requireContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
         selectedGroup = sharedPreferences.getString("group_number", null)
         selectedGroup?.let { binding.group.hint = it }
+        if (sharedPreferences.getString("group_number", null) != null) {
+            binding.group.updatePadding(right = 20.dpToPx())
+        }
+
 
         sendJsonRequest()
 
@@ -92,7 +97,7 @@ class HomeFragment : Fragment() {
 //            }
 //        }
 
-        // Инициализация GestureDetector здесь, после того как view привязана
+        // Инициализация GestureDetector после view привязаки
         gestureDetector = GestureDetector(requireContext(), object : GestureDetector.SimpleOnGestureListener() {
             override fun onFling(
                 e1: MotionEvent?,
@@ -132,6 +137,10 @@ class HomeFragment : Fragment() {
         }
 
         return binding.root
+    }
+
+    fun Int.dpToPx(): Int {
+        return (this * binding.root.resources.displayMetrics.density).toInt()
     }
 
     private fun initClickListeners() {
@@ -217,6 +226,7 @@ class HomeFragment : Fragment() {
         sendJsonRequest()
     }
 
+    //Модал DatePicker, неактуален
 //    private fun showDatePicker(onDateSelected: (String, String) -> Unit) {
 //        // Преобразуем выбранную дату в миллисекунды, если она существует
 //        val initialSelection = selectedDateForApi?.let {
@@ -262,6 +272,7 @@ class HomeFragment : Fragment() {
                     selectedGroup = input
                     saveGroupNumberToPrefs(input)
                     sendJsonRequest()
+                    binding.group.updatePadding(right = 20.dpToPx())
                 } else {
                     Toast.makeText(requireContext(), "Вы не ввели номер группы", Toast.LENGTH_SHORT).show()
                 }

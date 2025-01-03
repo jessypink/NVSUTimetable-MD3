@@ -6,4 +6,5 @@
     <string name="fab_description">Вернуться к сегодняшней дате</string>
     <string name="TypeTextView">Тип занятия</string>
     <string name="NameTextView">Название дисциплины</string>
+    <string name="Prefences_WeekView">Включить просмотр расписания сразу на неделю вместо одного дня. для этого достаточно просто выбрать любой день в неделе, для которой хотите просмотреть расписание.</string>
 </resources>
