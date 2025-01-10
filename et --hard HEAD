@@ -1,0 +1,119 @@
+[33mcommit 3d94163ca51b5a151a0993d6d2cc9bf340d4cfc4[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m
+Author: spvcxzzzz <dart.to8645@gmail.com>
+Date:   Sat Jan 4 01:04:15 2025 +0500
+
+    Added week view (very beta and almost do not working as well)
+    
+    added working setting toggle WeekView in settings
+    
+    reimagined SharedPreferences
+    
+    4fut:
+    #fix week view
+    #add date on lession if week view enabled
+    ##think on more settings
+
+[33mcommit 7968096adc5ebd81422e5f8ef14500bd17da5b19[m
+Author: Kirill <kirch69tf@gmail.com>
+Date:   Fri Jan 3 23:13:46 2025 +0500
+
+    Responsible GroupSearchBox right padding
+    Return second fragments - settings
+    в будущем:
+    ##расписание на неделю (возможно вместо "Группа")
+
+[33mcommit c8973ca70b68119c4d9eec537f6ef8e326717dd0[m
+Author: Kirill <kirch69tf@gmail.com>
+Date:   Fri Jan 3 21:06:53 2025 +0500
+
+    переосмысление текствью с группой и датой
+    в будущем:
+    ##расписание на неделю (возможно вместо "Группа")
+
+[33mcommit bf4defd3114cff74e82c511a7ae8fd9a563a6403[m
+Author: jessypink <40776396+jessypink@users.noreply.github.com>
+Date:   Fri Jan 3 07:31:11 2025 +0500
+
+    Update README.md
+
+[33mcommit c9861b44f0eae2e109499986813d45ccf613dbec[m
+Author: Kirill <kirch69tf@gmail.com>
+Date:   Fri Jan 3 07:25:36 2025 +0500
+
+    Добавил fab "сегодня"
+    При нажатии на уже выбранную дату запрос снова не отправляется - лимитирование нагрузки на сервер
+    ModalDatePicker заменил на CalendarView - UX+
+    Вкладка "Группа" пока что отключена (пока не придумаю что с ней делать)
+    
+    в будущем:
+    #переосмысление текствью с группой и датой
+    ##расписание на неделю (возможно вместо "Группа")
+
+[33mcommit 4ea7847bb6d3990f33e0e9606b163e93ab337922[m
+Author: Kirill <kirch69tf@gmail.com>
+Date:   Fri Jan 3 04:49:28 2025 +0500
+
+    Добавлены жесты для перехода на следующий или предыдущий день
+    Добавлена иконка, также ее Adaptive ерсия
+    
+    в будущем:
+    #созранение истории групп в поиске
+    #обозначение подгруппы, если такая есть
+
+[33mcommit 7c237e8ab4a4b704cde661e5f6f94cf0403a63a6[m
+Author: Kirill <kirch69tf@gmail.com>
+Date:   Fri Jan 3 01:45:28 2025 +0500
+
+    Добавлены псевдо чипсы для аудитории + корпуса и преподавателя
+    
+    в будущем:
+    #Monet icon
+    #Subgroup in lession
+
+[33mcommit e5b9eee8e218eab01e52fb7067048f980b21eb1b[m
+Author: jessypink <40776396+jessypink@users.noreply.github.com>
+Date:   Mon Dec 30 04:53:21 2024 +0500
+
+    Create README.md
+
+[33mcommit cda39644157ad83228ffa92e800f15af018f05f5[m
+Author: Kirill <kirch69tf@gmail.com>
+Date:   Mon Dec 30 04:51:38 2024 +0500
+
+    Added fabs to Timetable Fragment
+    Removed SelectDate button
+    all working base (again..)
+    
+    4fut:
+    #Monet icon
+    #Subgroup in lession
+
+[33mcommit 08f94a681fe2b926cdf8ffe0bd09c8ebd0d68338[m
+Author: Kirill <kirch69tf@gmail.com>
+Date:   Mon Dec 30 04:51:13 2024 +0500
+
+    Added fabs to Timetable Fragment
+    Removed SelectDate button
+    all working base (again..)
+    
+    4fut:
+    #Monet icon
+    #Subgroup in lession
+
+[33mcommit 99494463700f7c53b798627dfa0eeb001fdd0790[m
+Author: Kirill <kirch69tf@gmail.com>
+Date:   Sun Dec 29 22:29:05 2024 +0500
+
+    Full working base
+
+[33mcommit bfcde7e51107dca3764cc8e508523f54b8f5f481[m
+Author: spvcxzzzz <dart.to8645@gmail.com>
+Date:   Sun Dec 29 15:25:58 2024 +0500
+
+    init
+
+[33mcommit c61ec79709683dfb187c30abd9bde23cec2d6c67[m
+Author: spvcxzzzz <dart.to8645@gmail.com>
+Date:   Fri Dec 27 00:07:37 2024 +0500
+
+    init

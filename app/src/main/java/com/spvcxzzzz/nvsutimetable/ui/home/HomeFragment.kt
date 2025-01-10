@@ -33,6 +33,7 @@ import android.view.GestureDetector
 import android.view.MotionEvent
 import androidx.core.view.updatePadding
 import com.google.android.material.search.SearchBar
+import com.spvcxzzzz.nvsutimetable.model.Lesson
 
 
 class HomeFragment : Fragment() {
@@ -44,6 +45,7 @@ class HomeFragment : Fragment() {
     // Переменные для хранения группы и даты
     private var selectedGroup: String? = null
     private var selectedDateForApi: String? = null
+    private var selectedDateCalendar: Calendar? = null
 
     private lateinit var gestureDetector: GestureDetector
 
@@ -63,6 +65,10 @@ class HomeFragment : Fragment() {
         // Установка текущей даты и её значения для API
         val currentDate = LocalDate.now()
         val currentDateAsDate = Date.from(currentDate.atStartOfDay(ZoneId.systemDefault()).toInstant())
+
+        val calendar: Calendar = Calendar.getInstance()
+        selectedDateCalendar = calendar
+
         binding.textViewDate.text = formatDateForDisplay(currentDateAsDate)
         selectedDateForApi = formatDateForApi(currentDateAsDate)
 
@@ -93,19 +99,6 @@ class HomeFragment : Fragment() {
         // Настройка RecyclerView
         binding.recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
-        // Устанавливаем обработчики для FAB
-//        binding.fabGroup.setOnClickListener {
-//            // Вызов функции для выбора группы
-//            showNumberInputDialog(binding.group)
-//        }
-
-//        binding.fabToday.setOnClickListener {
-//            // Вызов функции выбора даты
-//            showDatePicker { selectedDate, formattedDateForApi ->
-//                binding.textViewDate.text = selectedDate
-//                selectedDateForApi = formattedDateForApi
-//            }
-//        }
 
         // Инициализация GestureDetector после view привязаки
         gestureDetector = GestureDetector(requireContext(), object : GestureDetector.SimpleOnGestureListener() {
@@ -123,16 +116,35 @@ class HomeFragment : Fragment() {
                 // Вычисляем разницу по горизонтали
                 val diffX = e2.x - e1.x
 
-                // Свайп вправо (убавить день)
-                if (diffX > threshold && Math.abs(velocityX) > velocityThreshold) {
-                    changeDate(-1) // Уменьшаем дату
-                }
-                // Свайп влево (прибавить день)
-                else if (diffX < -threshold && Math.abs(velocityX) > velocityThreshold) {
-                    changeDate(1) // Прибавляем дату
+                if (isWeekTimetableView == true) {
+                    if (diffX > threshold && Math.abs(velocityX) > velocityThreshold) {
+                        changeWeek(false)
+                    }
+                    // Свайп влево (прибавить день)
+                    else if (diffX < -threshold && Math.abs(velocityX) > velocityThreshold) {
+                        changeWeek(true)
+                    }
+                } else {
+                    // Свайп вправо (убавить день)
+                    if (diffX > threshold && Math.abs(velocityX) > velocityThreshold) {
+                        changeDate(-1) // Уменьшаем дату
+                    }
+                    // Свайп влево (прибавить день)
+                    else if (diffX < -threshold && Math.abs(velocityX) > velocityThreshold) {
+                        changeDate(1) // Прибавляем дату
+                    }
                 }
 
-                return true // Возвращаем true для обработки свайпа
+
+                // Устанавливаем OnTouchListener на RecyclerView
+                binding.recyclerView.setOnTouchListener { _, event ->
+                    // Передаем событие в GestureDetector для обработки
+                    gestureDetector.onTouchEvent(event)
+
+                    // Возвращаем false, чтобы позволить RecyclerView обрабатывать остальные события касания (например, прокрутку)
+                    return@setOnTouchListener false
+                }
+                    return true // Возвращаем true для обработки свайпа
             }
         })
 
@@ -190,6 +202,7 @@ class HomeFragment : Fragment() {
             val calendar = Calendar.getInstance().apply {
                 set(year, month, dayOfMonth)
             }
+            selectedDateCalendar = calendar
 
             // Получаем количество миллисекунд, чтобы использовать как в ModalDatePicker
             val selectedDateMillis = calendar.timeInMillis
@@ -236,35 +249,76 @@ class HomeFragment : Fragment() {
         SendRequestDayOrWeek()
     }
 
-    //Модал DatePicker, неактуален
-//    private fun showDatePicker(onDateSelected: (String, String) -> Unit) {
-//        // Преобразуем выбранную дату в миллисекунды, если она существует
-//        val initialSelection = selectedDateForApi?.let {
-//            // Преобразуем строку "dd_MM_yyyy" в объект Date
-//            val dateFormat = SimpleDateFormat("dd_MM_yyyy", Locale.getDefault())
-//            // Устанавливаем временную зону UTC
-//            dateFormat.timeZone = TimeZone.getTimeZone("UTC")
-//            val date = dateFormat.parse(it)
-//
-//            // Если дата корректно парсится, возвращаем её в миллисекундах, иначе выбираем сегодняшнюю дату
-//            date?.time ?: MaterialDatePicker.todayInUtcMilliseconds()
-//        } ?: MaterialDatePicker.todayInUtcMilliseconds()  // Если дата не выбрана, выбираем сегодняшнюю
-//
-//        val datePicker = MaterialDatePicker.Builder.datePicker()
-//            .setSelection(initialSelection)  // Устанавливаем начальную выбранную дату
-//            .setTitleText("Выберите дату")
-//            .build()
-//
-//        datePicker.addOnPositiveButtonClickListener { selectedDateMillis ->
-//            val calendarSelected = Calendar.getInstance().apply { timeInMillis = selectedDateMillis }
-//            val formattedDateForDisplay = formatDateForDisplay(calendarSelected.time)
-//            val formattedDateForApi = formatDateForApi(calendarSelected.time)
-//            onDateSelected(formattedDateForDisplay, formattedDateForApi)
-//            sendJsonRequest()
-//        }
-//
-//        datePicker.show(childFragmentManager, datePicker.toString())
-//    }
+    private fun changeWeek(Next: Boolean) {
+        if (Next == true) {
+            // Получаем текущую выбранную дату из CalendarView
+            val selectedDateInMillis = binding.calendarView2.date
+            val calendar = Calendar.getInstance().apply {
+                timeInMillis = selectedDateInMillis
+            }
+
+            // Определяем день недели
+            val dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK)
+
+            // Считаем, сколько дней до следующего понедельника
+            val daysToNextMonday = if (dayOfWeek == Calendar.MONDAY) 7 else (Calendar.MONDAY - dayOfWeek + 7) % 7
+
+            // Перемещаем дату на следующий понедельник
+            calendar.add(Calendar.DAY_OF_MONTH, daysToNextMonday)
+
+            // Обновляем CalendarView на следующую дату
+            binding.calendarView2.date = calendar.timeInMillis
+
+            val dateFormat = SimpleDateFormat("dd_MM_yyyy", Locale.getDefault())
+
+            // Получаем новую дату после прибавления одного дня
+            val newDate = calendar.time
+
+            // Форматируем новую дату обратно в строку
+            val newFormattedDate = dateFormat.format(newDate)
+
+            binding.textViewDate.setText(formatDateForDisplay(newDate))
+            selectedDateForApi = newFormattedDate
+
+            selectedDateCalendar = calendar.clone() as Calendar
+
+            fetchLessons()
+        } else {
+            // Получаем текущую выбранную дату из CalendarView
+            val selectedDateInMillis = binding.calendarView2.date
+            val calendar = Calendar.getInstance().apply {
+                timeInMillis = selectedDateInMillis
+            }
+
+            // Определяем день недели
+            val dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK)
+
+            // Вычисляем, сколько дней назад был понедельник прошлой недели
+            val daysToPreviousMonday = if (dayOfWeek == Calendar.MONDAY) 7 else (dayOfWeek - Calendar.MONDAY + 7)
+
+            // Перемещаем дату на понедельник прошлой недели
+            calendar.add(Calendar.DAY_OF_MONTH, -daysToPreviousMonday)
+
+            // Обновляем CalendarView на следующую дату
+            binding.calendarView2.date = calendar.timeInMillis
+
+            val dateFormat = SimpleDateFormat("dd_MM_yyyy", Locale.getDefault())
+
+            // Получаем новую дату после прибавления одного дня
+            val newDate = calendar.time
+
+            // Форматируем новую дату обратно в строку
+            val newFormattedDate = dateFormat.format(newDate)
+
+            binding.textViewDate.setText(formatDateForDisplay(newDate))
+            selectedDateForApi = newFormattedDate
+
+            selectedDateCalendar = calendar.clone() as Calendar
+
+            fetchLessons()
+        }
+    }
+
 
 
     private fun showNumberInputDialog(targetTextView: SearchBar) {
@@ -316,6 +370,38 @@ class HomeFragment : Fragment() {
         }
 
         return dates
+    }
+
+    // Функция для плавного скрытия layout при отсутствии занятий
+    fun hideNoTimetableLayout() {
+        binding.noDisciplinesLayout.animate()
+            .alpha(0f)  // Уменьшаем прозрачность до 0
+            .setDuration(200)
+            .withEndAction {  // После завершения анимации скрываем layout
+                binding.noDisciplinesLayout.visibility = View.GONE
+            }
+
+        binding.recyclerView.visibility = View.VISIBLE  // Делаем RecyclerView видимым
+        binding.recyclerView.alpha = 0f  // Устанавливаем начальную прозрачность
+        binding.recyclerView.animate()
+            .alpha(1f)  // Увеличиваем прозрачность до 1
+            .setDuration(200)
+    }
+
+    // Функция для плавного отображения layout если занятия есть
+    fun showNoTimetableLayout() {
+        binding.noDisciplinesLayout.visibility = View.VISIBLE  // Делаем layout видимым
+        binding.noDisciplinesLayout.alpha = 0f  // Устанавливаем начальную прозрачность
+        binding.noDisciplinesLayout.animate()
+            .alpha(1f)  // Увеличиваем прозрачность до 1
+            .setDuration(300)
+
+        binding.recyclerView.animate()
+            .alpha(0f)  // Уменьшаем прозрачность до 0
+            .setDuration(300)
+            .withEndAction {  // После завершения анимации скрываем RecyclerView
+                binding.recyclerView.visibility = View.GONE
+            }
     }
 
     private fun sendJsonRequest() {
@@ -371,40 +457,6 @@ class HomeFragment : Fragment() {
     }
 
     private fun parseTimetableResponse(jsonResponse: String?): List<Timetable> {
-        val noTimetableLayout = binding.noDisciplinesLayout
-        val lessonsRecyclerView = binding.recyclerView
-
-        // Функция для плавного скрытия layout при отсутствии занятий
-        fun hideNoTimetableLayout() {
-            noTimetableLayout.animate()
-                .alpha(0f)  // Уменьшаем прозрачность до 0
-                .setDuration(200)
-                .withEndAction {  // После завершения анимации скрываем layout
-                    noTimetableLayout.visibility = View.GONE
-                }
-
-            lessonsRecyclerView.visibility = View.VISIBLE  // Делаем RecyclerView видимым
-            lessonsRecyclerView.alpha = 0f  // Устанавливаем начальную прозрачность
-            lessonsRecyclerView.animate()
-                .alpha(1f)  // Увеличиваем прозрачность до 1
-                .setDuration(200)
-        }
-
-        // Функция для плавного отображения layout если занятия есть
-        fun showNoTimetableLayout() {
-            noTimetableLayout.visibility = View.VISIBLE  // Делаем layout видимым
-            noTimetableLayout.alpha = 0f  // Устанавливаем начальную прозрачность
-            noTimetableLayout.animate()
-                .alpha(1f)  // Увеличиваем прозрачность до 1
-                .setDuration(300)
-
-            lessonsRecyclerView.animate()
-                .alpha(0f)  // Уменьшаем прозрачность до 0
-                .setDuration(300)
-                .withEndAction {  // После завершения анимации скрываем RecyclerView
-                    lessonsRecyclerView.visibility = View.GONE
-                }
-        }
 
         if (jsonResponse.isNullOrEmpty()) {
             showNoTimetableLayout()  // Показываем layout "Занятий нет"
@@ -517,9 +569,105 @@ class HomeFragment : Fragment() {
 
         // В зависимости от значения вызываем нужную функцию
         if (isWeekViewEnabled) {
-            sendWeekJsonRequest() // Если week_timetable_view = true
+            fetchLessons() // Если week_timetable_view = true
         } else {
             sendJsonRequest() // Если week_timetable_view = false
+        }
+    }
+
+    private fun fetchLessons() {
+        // Получаем выбранную дату и группу
+        val group = "3102" // Или получаем из вашего источника
+        // Предположим, что getWeekDates возвращает список дат
+        val selectedDate = selectedDateCalendar  // Или любую другую дату, которую вы выбрали
+        val weekDates = getWeekDates(selectedDate!!)  // Это возвращает List<String>
+
+        // Задаем значения для переменных
+        val date1 = weekDates.get(0)
+        val date2 = weekDates.get(1)
+        val date3 = weekDates.get(2)
+        val date4 = weekDates.get(3)
+        val date5 = weekDates.get(4)
+        val date6 = weekDates.get(5)
+
+        println(date4 + " " + date5 + " " + date6 + " ")
+        // Выполняем асинхронные запросы для двух дней
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                val client = OkHttpClient()
+
+                // Создаем запросы для двух дней
+                val request1 = Request.Builder()
+                    .url("http://timetable.nvsuedu.ru/tm/index.php/json?&group=$group&date=$date1")
+                    .build()
+
+                val request2 = Request.Builder()
+                    .url("http://timetable.nvsuedu.ru/tm/index.php/json?&group=$group&date=$date2")
+                    .build()
+
+                val request3 = Request.Builder()
+                    .url("http://timetable.nvsuedu.ru/tm/index.php/json?&group=$group&date=$date3")
+                    .build()
+
+                val request4 = Request.Builder()
+                    .url("http://timetable.nvsuedu.ru/tm/index.php/json?&group=$group&date=$date4")
+                    .build()
+
+                val request5 = Request.Builder()
+                    .url("http://timetable.nvsuedu.ru/tm/index.php/json?&group=$group&date=$date5")
+                    .build()
+
+                val request6 = Request.Builder()
+                    .url("http://timetable.nvsuedu.ru/tm/index.php/json?&group=$group&date=$date6")
+                    .build()
+
+                // Отправляем запросы параллельно
+                val response1Deferred = async(Dispatchers.IO) { client.newCall(request1).execute() }
+                val response2Deferred = async(Dispatchers.IO) { client.newCall(request2).execute() }
+                val response3Deferred = async(Dispatchers.IO) { client.newCall(request3).execute() }
+                val response4Deferred = async(Dispatchers.IO) { client.newCall(request4).execute() }
+                val response5Deferred = async(Dispatchers.IO) { client.newCall(request5).execute() }
+                val response6Deferred = async(Dispatchers.IO) { client.newCall(request6).execute() }
+
+                // Получаем ответы
+                val response1 = response1Deferred.await()
+                val response2 = response2Deferred.await()
+                val response3 = response3Deferred.await()
+                val response4 = response4Deferred.await()
+                val response5 = response5Deferred.await()
+                val response6 = response6Deferred.await()
+
+                // Преобразуем JSON в список уроков с помощью Gson
+                val lessonsType = object : TypeToken<List<Lesson>>() {}.type
+                val lessons1: List<Lesson> = Gson().fromJson(response1.body?.string(), lessonsType)
+                val lessons2: List<Lesson> = Gson().fromJson(response2.body?.string(), lessonsType)
+                val lessons3: List<Lesson> = Gson().fromJson(response3.body?.string(), lessonsType)
+                val lessons4: List<Lesson> = Gson().fromJson(response4.body?.string(), lessonsType)
+                val lessons5: List<Lesson> = Gson().fromJson(response5.body?.string(), lessonsType)
+                val lessons6: List<Lesson> = Gson().fromJson(response6.body?.string(), lessonsType)
+
+                // Объединяем данные из запросов
+                val allLessons = lessons1 + lessons2 + lessons3 + lessons4 + lessons5 + lessons6
+
+                // Создаем и устанавливаем адаптер для RecyclerView
+                val adapter = LessonAdapter(allLessons)
+                binding.recyclerView.adapter = adapter
+                adapter.notifyDataSetChanged()
+
+                // Проверяем, пусты ли все ответы
+                val allResponsesEmpty = allLessons.isNullOrEmpty() // Проверка на пустоту всех элементов в списке
+
+                // В зависимости от результата вызываем нужную функцию
+                if (allResponsesEmpty) {
+                    showNoTimetableLayout()  // Если все ответы пустые, скрываем расписание
+                } else {
+                    hideNoTimetableLayout()  // Если хотя бы один день не пуст, показываем расписание
+                }
+
+            } catch (e: Exception) {
+                // Обработка ошибок
+                Toast.makeText(requireContext(), "Ошибка при загрузке данных", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
