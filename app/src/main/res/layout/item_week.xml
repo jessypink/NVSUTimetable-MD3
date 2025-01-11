@@ -45,4 +45,13 @@
         android:textSize="14sp"
         android:textColor="#757575"/>
 
+    <!-- Аудитория -->
+    <TextView
+        android:id="@+id/tv_aud"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Аудитория"
+        android:textSize="14sp"
+        android:textColor="#757575"/>
+
 </LinearLayout>
