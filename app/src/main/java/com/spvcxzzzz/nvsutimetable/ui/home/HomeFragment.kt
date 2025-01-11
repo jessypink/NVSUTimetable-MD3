@@ -33,6 +33,7 @@ import android.view.GestureDetector
 import android.view.MotionEvent
 import androidx.core.view.updatePadding
 import com.google.android.material.search.SearchBar
+import com.spvcxzzzz.nvsutimetable.model.DaySchedule
 import com.spvcxzzzz.nvsutimetable.model.Lesson
 
 
@@ -89,6 +90,12 @@ class HomeFragment : Fragment() {
                 putBoolean("week_timetable_view", false)
                 apply()
             }
+        }
+
+        if (sharedPreferences.getBoolean("week_timetable_view", false) == true) {
+            binding.calendarView2.visibility = View.GONE
+        } else {
+            binding.calendarView2.visibility = View.VISIBLE
         }
 
         SendRequestDayOrWeek()
@@ -186,14 +193,6 @@ class HomeFragment : Fragment() {
 
             }
 
-        // Открытие DatePicker для выбора даты
-//        binding.fabToday.setOnClickListener {
-//            showDatePicker { selectedDate, formattedDateForApi ->
-//                binding.textViewDate.text = selectedDate
-//                selectedDateForApi = formattedDateForApi
-//            }
-//        }
-
         // Открытие диалога для ввода номера группы
         binding.group.setOnClickListener { showNumberInputDialog(binding.group) }
 
@@ -277,7 +276,7 @@ class HomeFragment : Fragment() {
             // Форматируем новую дату обратно в строку
             val newFormattedDate = dateFormat.format(newDate)
 
-            binding.textViewDate.setText(formatDateForDisplay(newDate))
+            binding.textViewDate.setText(getFormattedDateRange(calendar))
             selectedDateForApi = newFormattedDate
 
             selectedDateCalendar = calendar.clone() as Calendar
@@ -310,7 +309,7 @@ class HomeFragment : Fragment() {
             // Форматируем новую дату обратно в строку
             val newFormattedDate = dateFormat.format(newDate)
 
-            binding.textViewDate.setText(formatDateForDisplay(newDate))
+            binding.textViewDate.setText(getFormattedDateRange(calendar))
             selectedDateForApi = newFormattedDate
 
             selectedDateCalendar = calendar.clone() as Calendar
@@ -319,7 +318,20 @@ class HomeFragment : Fragment() {
         }
     }
 
+    fun getFormattedDateRange(calendar: Calendar): String {
+        // Получаем текущую дату (например, 6 января)
+        val startDay = calendar.get(Calendar.DAY_OF_MONTH)
+        val month = calendar.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale("ru")) // Месяц на русском
 
+        // Добавляем к дате неделю
+        calendar.add(Calendar.DAY_OF_MONTH, 6) // Сдвигаем на 6 дней вперед, чтобы получить вторую дату
+        val endDay = calendar.get(Calendar.DAY_OF_MONTH)
+
+        val month2 = calendar.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale("ru")) // Месяц на русском
+
+        // Формируем строку
+        return "$startDay $month - $endDay $month2"
+    }
 
     private fun showNumberInputDialog(targetTextView: SearchBar) {
         val dialogView = layoutInflater.inflate(R.layout.input_group, null)
@@ -493,54 +505,6 @@ class HomeFragment : Fragment() {
         return sdf.format(calendar.time)
     }
 
-    //Создание реквеста если чекнут расписание на неделю
-    private fun sendWeekJsonRequest() {
-        val group = selectedGroup ?: run {
-            Toast.makeText(requireContext(), "Введите номер группы", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        val date = selectedDateForApi ?: run {
-            Toast.makeText(requireContext(), "Выберите дату", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        // Вычисляем понедельник для выбранной недели
-        val mondayDate = getMondayOfWeek(date)
-        val client = OkHttpClient()
-
-        val timetableList = mutableListOf<Timetable>()
-        val daysOfWeek = arrayOf(mondayDate, getNextDate(mondayDate, 1), getNextDate(mondayDate, 2), getNextDate(mondayDate, 3), getNextDate(mondayDate, 4), getNextDate(mondayDate, 5), getNextDate(mondayDate, 6))
-
-        // Отправляем запросы для каждого дня недели
-        for (day in daysOfWeek) {
-            val url = "http://timetable.nvsuedu.ru/tm/index.php/json?&group=$group&date=$day"
-            val request = Request.Builder().url(url).build()
-            client.newCall(request).enqueue(object : Callback {
-                override fun onResponse(call: Call, response: Response) {
-                    if (response.isSuccessful) {
-                        val jsonResponse = response.body?.string()
-                        activity?.runOnUiThread {
-                            val timetableForDay = parseTimetableResponse(jsonResponse)
-                            timetableList.addAll(timetableForDay) // Добавляем данные за день в общий список
-                            displayTimetable(timetableList)
-                        }
-                    } else {
-                        activity?.runOnUiThread {
-                            Toast.makeText(requireContext(), "Ошибка при запросе", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                }
-
-                override fun onFailure(call: Call, e: IOException) {
-                    activity?.runOnUiThread {
-                        Toast.makeText(requireContext(), "Ошибка сети: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            })
-        }
-    }
-
     private fun getNextDate(date: String, daysToAdd: Int): String {
         val sdf = SimpleDateFormat("dd_MM_yyyy", Locale.getDefault())
         val calendar = Calendar.getInstance()
@@ -550,8 +514,6 @@ class HomeFragment : Fragment() {
     }
 
     private fun displayTimetable(timetableList: List<Timetable>) {
-        Log.d("TimetableAdapter", "Передаем в адаптер список с размером: ${timetableList.size}")
-
         // Проверяем, пустой ли список
         val isEmpty = timetableList.isEmpty()
 
@@ -577,51 +539,46 @@ class HomeFragment : Fragment() {
 
     private fun fetchLessons() {
         // Получаем выбранную дату и группу
-        val group = "3102" // Или получаем из вашего источника
-        // Предположим, что getWeekDates возвращает список дат
-        val selectedDate = selectedDateCalendar  // Или любую другую дату, которую вы выбрали
-        val weekDates = getWeekDates(selectedDate!!)  // Это возвращает List<String>
+        val group = selectedGroup ?: run {
+            Toast.makeText(requireContext(), "Введите номер группы", Toast.LENGTH_SHORT).show()
+            return
+        } // Или получаем из вашего источника
+        val selectedDate = selectedDateCalendar // Или любую другую дату, которую вы выбрали
+        val weekDates = getWeekDates(selectedDate!!) // Это возвращает List<String>
 
         // Задаем значения для переменных
-        val date1 = weekDates.get(0)
-        val date2 = weekDates.get(1)
-        val date3 = weekDates.get(2)
-        val date4 = weekDates.get(3)
-        val date5 = weekDates.get(4)
-        val date6 = weekDates.get(5)
+        val date1 = weekDates[0]
+        val date2 = weekDates[1]
+        val date3 = weekDates[2]
+        val date4 = weekDates[3]
+        val date5 = weekDates[4]
+        val date6 = weekDates[5]
 
-        println(date4 + " " + date5 + " " + date6 + " ")
-        // Выполняем асинхронные запросы для двух дней
         CoroutineScope(Dispatchers.Main).launch {
             try {
                 val client = OkHttpClient()
 
-                // Создаем запросы для двух дней
+                // Создаем запросы для каждой даты
                 val request1 = Request.Builder()
                     .url("http://timetable.nvsuedu.ru/tm/index.php/json?&group=$group&date=$date1")
                     .build()
-
                 val request2 = Request.Builder()
                     .url("http://timetable.nvsuedu.ru/tm/index.php/json?&group=$group&date=$date2")
                     .build()
-
                 val request3 = Request.Builder()
                     .url("http://timetable.nvsuedu.ru/tm/index.php/json?&group=$group&date=$date3")
                     .build()
-
                 val request4 = Request.Builder()
                     .url("http://timetable.nvsuedu.ru/tm/index.php/json?&group=$group&date=$date4")
                     .build()
-
                 val request5 = Request.Builder()
                     .url("http://timetable.nvsuedu.ru/tm/index.php/json?&group=$group&date=$date5")
                     .build()
-
                 val request6 = Request.Builder()
                     .url("http://timetable.nvsuedu.ru/tm/index.php/json?&group=$group&date=$date6")
                     .build()
 
-                // Отправляем запросы параллельно
+                // Параллельное выполнение запросов
                 val response1Deferred = async(Dispatchers.IO) { client.newCall(request1).execute() }
                 val response2Deferred = async(Dispatchers.IO) { client.newCall(request2).execute() }
                 val response3Deferred = async(Dispatchers.IO) { client.newCall(request3).execute() }
@@ -629,7 +586,7 @@ class HomeFragment : Fragment() {
                 val response5Deferred = async(Dispatchers.IO) { client.newCall(request5).execute() }
                 val response6Deferred = async(Dispatchers.IO) { client.newCall(request6).execute() }
 
-                // Получаем ответы
+                // Получение ответов
                 val response1 = response1Deferred.await()
                 val response2 = response2Deferred.await()
                 val response3 = response3Deferred.await()
@@ -637,7 +594,8 @@ class HomeFragment : Fragment() {
                 val response5 = response5Deferred.await()
                 val response6 = response6Deferred.await()
 
-                // Преобразуем JSON в список уроков с помощью Gson
+
+                // Преобразуем JSON в списки уроков
                 val lessonsType = object : TypeToken<List<Lesson>>() {}.type
                 val lessons1: List<Lesson> = Gson().fromJson(response1.body?.string(), lessonsType)
                 val lessons2: List<Lesson> = Gson().fromJson(response2.body?.string(), lessonsType)
@@ -646,23 +604,31 @@ class HomeFragment : Fragment() {
                 val lessons5: List<Lesson> = Gson().fromJson(response5.body?.string(), lessonsType)
                 val lessons6: List<Lesson> = Gson().fromJson(response6.body?.string(), lessonsType)
 
-                // Объединяем данные из запросов
-                val allLessons = lessons1 + lessons2 + lessons3 + lessons4 + lessons5 + lessons6
+                // Список дней недели
+                val weekDays = listOf("Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота")
 
-                // Создаем и устанавливаем адаптер для RecyclerView
-                val adapter = LessonAdapter(allLessons)
+                // Формируем расписание для каждого дня
+                val daySchedules = mutableListOf<DaySchedule>()
+
+                for (i in weekDays.indices) {
+                    val lessonsForDay = when (i) {
+                        0 -> lessons1
+                        1 -> lessons2
+                        2 -> lessons3
+                        3 -> lessons4
+                        4 -> lessons5
+                        5 -> lessons6
+                        else -> emptyList()
+                    }
+
+                    val daySchedule = DaySchedule(weekDays[i], lessonsForDay)
+                    daySchedules.add(daySchedule)
+                }
+
+                // Устанавливаем адаптер для RecyclerView
+                val adapter = WeeklyScheduleAdapter(daySchedules)
                 binding.recyclerView.adapter = adapter
                 adapter.notifyDataSetChanged()
-
-                // Проверяем, пусты ли все ответы
-                val allResponsesEmpty = allLessons.isNullOrEmpty() // Проверка на пустоту всех элементов в списке
-
-                // В зависимости от результата вызываем нужную функцию
-                if (allResponsesEmpty) {
-                    showNoTimetableLayout()  // Если все ответы пустые, скрываем расписание
-                } else {
-                    hideNoTimetableLayout()  // Если хотя бы один день не пуст, показываем расписание
-                }
 
             } catch (e: Exception) {
                 // Обработка ошибок
@@ -670,6 +636,7 @@ class HomeFragment : Fragment() {
             }
         }
     }
+
 
     override fun onDestroyView() {
         super.onDestroyView()

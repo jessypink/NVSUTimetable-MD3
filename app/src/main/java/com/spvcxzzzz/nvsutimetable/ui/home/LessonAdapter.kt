@@ -22,6 +22,8 @@ class LessonAdapter(private val lessons: List<Lesson>) : RecyclerView.Adapter<Le
     override fun onBindViewHolder(holder: LessonViewHolder, position: Int) {
         val lesson = lessons[position]
 
+        println("Binding lesson: $lesson")
+
         fun distantCheck(): String {
             if (lesson.AUD == "Дистанционная") {
                 val answer = "Дистанционная"
