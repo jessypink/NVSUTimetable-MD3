@@ -25,6 +25,7 @@ class TimetableAdapter(private var timetableList: List<Timetable>, private val i
         val cabinet: TextView = itemView.findViewById(R.id.TextView_Cabinet)
         val prepod: TextView = itemView.findViewById(R.id.TextView_Lector)
         val subgroup: TextView = itemView.findViewById(R.id.TextView_Subgroup)
+        val divider: View = itemView.findViewById(R.id.divider)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TimetableViewHolder {
@@ -37,6 +38,7 @@ class TimetableAdapter(private var timetableList: List<Timetable>, private val i
         if (isEmpty) {
             // Если список пуст, скрываем timeHolder
             holder.itemMainLayout.visibility = View.GONE
+            holder.divider.visibility = View.GONE
         } else {
             val timetable = timetableList[position]
 
@@ -82,14 +84,15 @@ class TimetableAdapter(private var timetableList: List<Timetable>, private val i
                 holder.prepod.visibility = View.GONE
                 holder.cabinet.visibility = View.GONE
                 holder.startOfLesson.visibility = View.GONE
-                holder.endOfLesson.visibility = View.GONE // скрываем, если нет данных
+                holder.endOfLesson.visibility = View.GONE
+                holder.divider.visibility = View.GONE
+            // скрываем, если нет данных
             } else {
                 holder.startOfLesson.text = startTime
                 holder.endOfLesson.text = endTime
             }
-
-
             holder.itemMainLayout.visibility = View.VISIBLE
+            holder.divider.visibility = View.VISIBLE
         }
     }
 

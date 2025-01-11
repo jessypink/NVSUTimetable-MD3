@@ -71,7 +71,7 @@ class LessonAdapter(private val lessons: List<Lesson>) : RecyclerView.Adapter<Le
                 return "Консультация перед экзаменом"
             } else if (type == "Эк") {
                 return "Экзамен"
-            } else if (type == "Пр") {
+            } else if (type == "!Практика") {
                 return "Практика"
             } else return type
         }

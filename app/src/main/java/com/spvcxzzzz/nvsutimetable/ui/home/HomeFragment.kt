@@ -89,7 +89,7 @@ class HomeFragment : Fragment() {
         var isWeekTimetableView = sharedPreferences.getBoolean("week_timetable_view", false)
 
         if (!sharedPreferences.contains("week_timetable_view")) {
-            // Если ключ ещ не существует
+            // Если ключ еще не существует
             val sharedPreferences1 = requireContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
             with(sharedPreferences.edit()) {
                 putBoolean("week_timetable_view", false)
@@ -215,9 +215,6 @@ class HomeFragment : Fragment() {
             }
             selectedDateCalendar = calendar
 
-            // Получаем количество миллисекунд, чтобы использовать как в ModalDatePicker
-            val selectedDateMillis = calendar.timeInMillis
-
             // Форматируем дату для отображения и API
             val formattedDateForDisplay = formatDateForDisplay(calendar.time)
             val formattedDateForApi = formatDateForApi(calendar.time)
@@ -329,48 +326,47 @@ class HomeFragment : Fragment() {
 
             fetchLessons()
         } else {
-            val selectedDateInMillis = LocalDate.now()
+            val selectedDateInMillis = System.currentTimeMillis() // Берем текущую реальную дату в миллисекундах
 
-            // Получаем миллисекунды для выбранной даты
-            val millis = selectedDateInMillis.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-
-            // Получаем текущую выбранную дату из CalendarView
+            // Получаем текущую дату и время в объект Calendar
             val calendar = Calendar.getInstance().apply {
-                timeInMillis = millis
+                firstDayOfWeek = Calendar.MONDAY // Устанавливаем понедельник как первый день недели
+                timeInMillis = selectedDateInMillis
             }
 
-            // Определяем день недели
+            // Определяем день недели с учетом, что неделя начинается с понедельника
             val dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK)
 
-            // Вычисляем, сколько дней нужно отнять, чтобы попасть на понедельник текущей недели
+            // Вычисляем смещение до понедельника текущей недели
             val daysToMonday = if (dayOfWeek == Calendar.MONDAY) {
-                0  // Если сегодня понедельник, ничего не изменяем
+                0 // Если сегодня понедельник, смещение не требуется
             } else {
-                // Получаем сколько дней нужно отнять, чтобы попасть на понедельник
-                dayOfWeek - Calendar.MONDAY
+                if (dayOfWeek < Calendar.MONDAY) {
+                    // В случае если день недели — воскресенье
+                    -6
+                } else {
+                    Calendar.MONDAY - dayOfWeek
+                }
             }
 
-            // Перемещаем дату на понедельник текущей недели
-            calendar.add(Calendar.DAY_OF_MONTH, -daysToMonday)
+            // Перемещаем календарь на понедельник текущей недели
+            calendar.add(Calendar.DAY_OF_MONTH, daysToMonday)
 
-            // Обновляем CalendarView на следующую дату
+            // Обновляем CalendarView на понедельник текущей недели
             binding.calendarView2.date = calendar.timeInMillis
 
             val dateFormat = SimpleDateFormat("dd_MM_yyyy", Locale.getDefault())
 
-            // Получаем новую дату
-            val newDate = calendar.time
+            // Получаем новую дату и форматируем ее
+            val newFormattedDate = dateFormat.format(calendar.time)
 
-            // Форматируем новую дату обратно в строку
-            val newFormattedDate = dateFormat.format(newDate)
-
-            binding.textViewDate.setText(getFormattedDateRange(calendar))
+            binding.textViewDate.text = getFormattedDateRange(calendar)
             selectedDateForApi = newFormattedDate
 
+            // Устанавливаем selectedDateCalendar как копию календаря
             selectedDateCalendar = calendar.clone() as Calendar
 
             fetchLessons()
-
         }
     }
 
@@ -472,7 +468,7 @@ class HomeFragment : Fragment() {
             }
     }
 
-    // Функция для плавного скрытия Recycler ри загрузке
+    // Функция для плавного скрытия Recycler при загрузке
     fun showLoaderHideRecycler() {
         binding.recyclerView.animate()
             .alpha(0f)  // Уменьшаем прозрачность до 0
@@ -488,7 +484,7 @@ class HomeFragment : Fragment() {
             .setDuration(200)
     }
 
-    // Функция для плавного показа Recycler ри загрузке
+    // Функция для плавного показа Recycler после загрузки
     fun hideLoaderShowRecycler() {
         binding.loaderLayout.animate()
             .alpha(0f)  // Уменьшаем прозрачность до 0
@@ -500,6 +496,52 @@ class HomeFragment : Fragment() {
         binding.recyclerView.visibility = View.VISIBLE  // Делаем Loader видимым
         binding.recyclerView.alpha = 0f  // Устанавливаем начальную прозрачность
         binding.recyclerView.animate()
+            .alpha(1f)  // Увеличиваем прозрачность до 1
+            .setDuration(200)
+    }
+
+    // Функция для плавного скрытия занятий нет и ресайкла при загрузке
+    fun hideAllShowLoader() {
+        binding.recyclerView.animate()
+            .alpha(0f)  // Уменьшаем прозрачность до 0
+            .setDuration(100)
+            .withEndAction {  // После завершения анимации скрываем recycler
+                binding.recyclerView.visibility = View.GONE
+            }
+
+        binding.noDisciplinesLayout.animate()
+            .alpha(0f)  // Уменьшаем прозрачность до 0
+            .setDuration(100)
+            .withEndAction {  // После завершения анимации скрываем noDisciplinesLayout
+                binding.recyclerView.visibility = View.GONE
+            }
+
+        binding.loaderLayout.visibility = View.VISIBLE  // Делаем Loader видимым
+        binding.loaderLayout.alpha = 0f  // Устанавливаем начальную прозрачность
+        binding.loaderLayout.animate()
+            .alpha(1f)  // Увеличиваем прозрачность до 1
+            .setDuration(200)
+    }
+
+    // Функция для плавного показа занятий нет после загрузки
+    fun hideLoaderShowNotimetable() {
+        binding.loaderLayout.animate()
+            .alpha(0f)  // Уменьшаем прозрачность до 0
+            .setDuration(200)
+            .withEndAction {  // После завершения анимации скрываем recycler
+                binding.loaderLayout.visibility = View.GONE
+            }
+
+        binding.recyclerView.animate()
+            .alpha(0f)  // Уменьшаем прозрачность до 0
+            .setDuration(300)
+            .withEndAction {  // После завершения анимации скрываем RecyclerView
+                binding.recyclerView.visibility = View.GONE
+            }
+
+        binding.noDisciplinesLayout.visibility = View.VISIBLE  // Делаем Loader видимым
+        binding.noDisciplinesLayout.alpha = 0f  // Устанавливаем начальную прозрачность
+        binding.noDisciplinesLayout.animate()
             .alpha(1f)  // Увеличиваем прозрачность до 1
             .setDuration(200)
     }
@@ -516,37 +558,44 @@ class HomeFragment : Fragment() {
             return
         }
 
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                val client = OkHttpClient()
 
-        val url = "http://timetable.nvsuedu.ru/tm/index.php/json?&group=$group&date=$date"
+                // Создаем запросы для каждой даты
+                val request = Request.Builder()
+                    .url("http://timetable.nvsuedu.ru/tm/index.php/json?&group=$group&date=$date")
+                    .build()
+                // Параллельное выполнение запросов
+                val responseDeferred = async(Dispatchers.IO) { client.newCall(request).execute() }
 
-        // Создаем запрос с помощью OkHttp
-        val client = OkHttpClient()
-        val request = Request.Builder()
-            .url(url)
-            .build()
+                hideAllShowLoader()
 
-        client.newCall(request).enqueue(object : Callback {
-            override fun onResponse(call: Call, response: Response) {
-                if (response.isSuccessful) {
-                    val jsonResponse = response.body?.string()
-                    activity?.runOnUiThread {
-                        val timetableList = parseTimetableResponse(jsonResponse)
-                        displayTimetable(timetableList)
-                    }
+                // Получение ответов
+                val response = responseDeferred.await()
+
+                val jsonResponse = response.body?.string()
+
+                val timetableList = parseTimetableResponse(jsonResponse)
+
+                val isEmpty = timetableList.isEmpty()
+                // Передаем флаг в адаптер
+                val adapter = TimetableAdapter(timetableList, isEmpty)
+                binding.recyclerView.adapter = adapter
+
+                displayTimetable(timetableList)
+                if (isEmpty == true) {
+                    hideLoaderShowNotimetable()
                 } else {
-                    activity?.runOnUiThread {
-                        Toast.makeText(requireContext(), "Ошибка при запросе", Toast.LENGTH_SHORT).show()
-                    }
+                    hideLoaderShowRecycler()
                 }
-            }
 
-            override fun onFailure(call: Call, e: IOException) {
-                activity?.runOnUiThread {
-                    Toast.makeText(requireContext(), "Ошибка сети: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
-                    Log.e("NetworkError", e.localizedMessage ?: "Unknown error")
-                }
+            } catch (e: Exception) {
+                // Обработка ошибок
+                Toast.makeText(requireContext(), "Ошибка сети: ${e.message}", Toast.LENGTH_SHORT).show()
+                Log.e("NetworkError", e.localizedMessage ?: "Unknown error")
             }
-        })
+        }
     }
 
     private fun saveGroupNumberToPrefs(groupNumber: String) {
@@ -560,8 +609,8 @@ class HomeFragment : Fragment() {
     private fun parseTimetableResponse(jsonResponse: String?): List<Timetable> {
 
         if (jsonResponse.isNullOrEmpty()) {
-            showNoTimetableLayout()  // Показываем layout "Занятий нет"
-            return listOf(Timetable("Занятий нет", "", "", "", "", "", "", "", ""))
+            hideLoaderShowNotimetable() // Показываем layout "Занятий нет" и скрываем лоадер
+            return emptyList()
         }
 
         return try {
@@ -570,19 +619,20 @@ class HomeFragment : Fragment() {
             val timetableList: List<Timetable> = gson.fromJson(jsonResponse, type) ?: emptyList()
 
             if (timetableList.isEmpty()) {
-                showNoTimetableLayout()  // Показываем layout "Занятий нет"
-                listOf(Timetable("", "", null, null, "", "", "", "", ""))
+                hideLoaderShowNotimetable() // Показываем layout "Занятий нет" и скрываем лоадер
+                return emptyList()
             } else {
                 hideNoTimetableLayout()  // Скрываем layout "Занятий нет"
-                timetableList
+                return timetableList
             }
         } catch (e: JsonSyntaxException) {
             Toast.makeText(requireContext(), "Ошибка при парсинге данных: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
             e.printStackTrace()
             showNoTimetableLayout()  // Показываем layout "Занятий нет" при ошибке
-            listOf(Timetable("Занятий нет", "", null, null, "", "", "", "", ""))
+            return emptyList()
         }
     }
+
 
     //Вычисление даты понедельника если чекнут расписание на неделю
     private fun getMondayOfWeek(selectedDate: String): String {
@@ -605,10 +655,10 @@ class HomeFragment : Fragment() {
     private fun displayTimetable(timetableList: List<Timetable>) {
         // Проверяем, пустой ли список
         val isEmpty = timetableList.isEmpty()
-
         // Передаем флаг в адаптер
         val adapter = TimetableAdapter(timetableList, isEmpty)
         binding.recyclerView.adapter = adapter
+
     }
 
     fun isRequestDayOrWeek(): Boolean {
