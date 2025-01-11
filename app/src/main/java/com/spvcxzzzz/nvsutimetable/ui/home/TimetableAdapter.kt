@@ -86,7 +86,6 @@ class TimetableAdapter(private var timetableList: List<Timetable>, private val i
             } else {
                 holder.startOfLesson.text = startTime
                 holder.endOfLesson.text = endTime
-//                holder.startOfLesson.visibility = View.VISIBLE
             }
 
 

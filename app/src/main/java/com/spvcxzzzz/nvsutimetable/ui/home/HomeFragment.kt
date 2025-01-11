@@ -32,9 +32,11 @@ import java.util.*
 import android.view.GestureDetector
 import android.view.MotionEvent
 import androidx.core.view.updatePadding
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.search.SearchBar
 import com.spvcxzzzz.nvsutimetable.model.DaySchedule
 import com.spvcxzzzz.nvsutimetable.model.Lesson
+import java.time.format.DateTimeFormatter
 
 
 class HomeFragment : Fragment() {
@@ -47,6 +49,9 @@ class HomeFragment : Fragment() {
     private var selectedGroup: String? = null
     private var selectedDateForApi: String? = null
     private var selectedDateCalendar: Calendar? = null
+
+    var isScrollingUp = false
+    var isScrollingDown = false
 
     private lateinit var gestureDetector: GestureDetector
 
@@ -94,8 +99,10 @@ class HomeFragment : Fragment() {
 
         if (sharedPreferences.getBoolean("week_timetable_view", false) == true) {
             binding.calendarView2.visibility = View.GONE
+            binding.fabPickToday.shrink()
         } else {
             binding.calendarView2.visibility = View.VISIBLE
+            binding.fabPickToday.extend()
         }
 
         SendRequestDayOrWeek()
@@ -125,11 +132,11 @@ class HomeFragment : Fragment() {
 
                 if (isWeekTimetableView == true) {
                     if (diffX > threshold && Math.abs(velocityX) > velocityThreshold) {
-                        changeWeek(false)
+                        changeWeek(2)
                     }
                     // Свайп влево (прибавить день)
                     else if (diffX < -threshold && Math.abs(velocityX) > velocityThreshold) {
-                        changeWeek(true)
+                        changeWeek(1)
                     }
                 } else {
                     // Свайп вправо (убавить день)
@@ -173,6 +180,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun initClickListeners() {
+
             binding.fabPickToday.setOnClickListener {
                 val todayMillis = Calendar.getInstance().timeInMillis
                 binding.calendarView2.setDate(todayMillis, true, true)
@@ -182,13 +190,17 @@ class HomeFragment : Fragment() {
                 // Форматируем дату для отображения и API
                 val formattedDateForDisplay = formatDateForDisplay(calendar.time)
                 val formattedDateForApi = formatDateForApi(calendar.time)
-
                 selectedDateForApi = formattedDateForApi
+
                 if (binding.textViewDate.text == formattedDateForDisplay) {
-//                    Toast.makeText(requireContext(), "без запроса", Toast.LENGTH_SHORT).show()
                 } else {
                     binding.textViewDate.text = formattedDateForDisplay
-                    SendRequestDayOrWeek()
+                    //Проверка на показ в виде недели, если да, то надо изменить дату для функции запроса расписания на неделю:
+                    if (isRequestDayOrWeek() == true) {
+                        changeWeek(3) //любой ключ отличный от 1 и 2 - текущая неделя
+                    } else {
+                        sendJsonRequest()
+                    }
                 }
 
             }
@@ -248,8 +260,9 @@ class HomeFragment : Fragment() {
         SendRequestDayOrWeek()
     }
 
-    private fun changeWeek(Next: Boolean) {
-        if (Next == true) {
+    //Next = 1 - следующая неделя, 2 - предыдущая, иначе - текущая
+    private fun changeWeek(Next: Int) {
+        if (Next == 1) {
             // Получаем текущую выбранную дату из CalendarView
             val selectedDateInMillis = binding.calendarView2.date
             val calendar = Calendar.getInstance().apply {
@@ -282,7 +295,7 @@ class HomeFragment : Fragment() {
             selectedDateCalendar = calendar.clone() as Calendar
 
             fetchLessons()
-        } else {
+        } else if (Next == 2) {
             // Получаем текущую выбранную дату из CalendarView
             val selectedDateInMillis = binding.calendarView2.date
             val calendar = Calendar.getInstance().apply {
@@ -315,6 +328,49 @@ class HomeFragment : Fragment() {
             selectedDateCalendar = calendar.clone() as Calendar
 
             fetchLessons()
+        } else {
+            val selectedDateInMillis = LocalDate.now()
+
+            // Получаем миллисекунды для выбранной даты
+            val millis = selectedDateInMillis.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
+            // Получаем текущую выбранную дату из CalendarView
+            val calendar = Calendar.getInstance().apply {
+                timeInMillis = millis
+            }
+
+            // Определяем день недели
+            val dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK)
+
+            // Вычисляем, сколько дней нужно отнять, чтобы попасть на понедельник текущей недели
+            val daysToMonday = if (dayOfWeek == Calendar.MONDAY) {
+                0  // Если сегодня понедельник, ничего не изменяем
+            } else {
+                // Получаем сколько дней нужно отнять, чтобы попасть на понедельник
+                dayOfWeek - Calendar.MONDAY
+            }
+
+            // Перемещаем дату на понедельник текущей недели
+            calendar.add(Calendar.DAY_OF_MONTH, -daysToMonday)
+
+            // Обновляем CalendarView на следующую дату
+            binding.calendarView2.date = calendar.timeInMillis
+
+            val dateFormat = SimpleDateFormat("dd_MM_yyyy", Locale.getDefault())
+
+            // Получаем новую дату
+            val newDate = calendar.time
+
+            // Форматируем новую дату обратно в строку
+            val newFormattedDate = dateFormat.format(newDate)
+
+            binding.textViewDate.setText(getFormattedDateRange(calendar))
+            selectedDateForApi = newFormattedDate
+
+            selectedDateCalendar = calendar.clone() as Calendar
+
+            fetchLessons()
+
         }
     }
 
@@ -416,6 +472,38 @@ class HomeFragment : Fragment() {
             }
     }
 
+    // Функция для плавного скрытия Recycler ри загрузке
+    fun showLoaderHideRecycler() {
+        binding.recyclerView.animate()
+            .alpha(0f)  // Уменьшаем прозрачность до 0
+            .setDuration(100)
+            .withEndAction {  // После завершения анимации скрываем recycler
+                binding.recyclerView.visibility = View.GONE
+            }
+
+        binding.loaderLayout.visibility = View.VISIBLE  // Делаем Loader видимым
+        binding.loaderLayout.alpha = 0f  // Устанавливаем начальную прозрачность
+        binding.loaderLayout.animate()
+            .alpha(1f)  // Увеличиваем прозрачность до 1
+            .setDuration(200)
+    }
+
+    // Функция для плавного показа Recycler ри загрузке
+    fun hideLoaderShowRecycler() {
+        binding.loaderLayout.animate()
+            .alpha(0f)  // Уменьшаем прозрачность до 0
+            .setDuration(200)
+            .withEndAction {  // После завершения анимации скрываем recycler
+                binding.loaderLayout.visibility = View.GONE
+            }
+
+        binding.recyclerView.visibility = View.VISIBLE  // Делаем Loader видимым
+        binding.recyclerView.alpha = 0f  // Устанавливаем начальную прозрачность
+        binding.recyclerView.animate()
+            .alpha(1f)  // Увеличиваем прозрачность до 1
+            .setDuration(200)
+    }
+
     private fun sendJsonRequest() {
         // Используем переменные для формирования URL
         val group = selectedGroup ?: run {
@@ -427,6 +515,7 @@ class HomeFragment : Fragment() {
             Toast.makeText(requireContext(), "Выберите дату", Toast.LENGTH_SHORT).show()
             return
         }
+
 
         val url = "http://timetable.nvsuedu.ru/tm/index.php/json?&group=$group&date=$date"
 
@@ -522,6 +611,21 @@ class HomeFragment : Fragment() {
         binding.recyclerView.adapter = adapter
     }
 
+    fun isRequestDayOrWeek(): Boolean {
+        // Получаем SharedPreferences
+        val sharedPreferences = requireContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+
+        // Получаем значение по ключу "week_timetable_view" (по умолчанию false)
+        val isWeekViewEnabled = sharedPreferences.getBoolean("week_timetable_view", false)
+
+        // В зависимости от значения вызываем нужную функцию
+        if (isWeekViewEnabled) {
+            return true// Если week_timetable_view = true
+        } else {
+            return false // Если week_timetable_view = false
+        }
+    }
+
     fun SendRequestDayOrWeek() {
         // Получаем SharedPreferences
         val sharedPreferences = requireContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
@@ -586,6 +690,8 @@ class HomeFragment : Fragment() {
                 val response5Deferred = async(Dispatchers.IO) { client.newCall(request5).execute() }
                 val response6Deferred = async(Dispatchers.IO) { client.newCall(request6).execute() }
 
+                showLoaderHideRecycler()
+
                 // Получение ответов
                 val response1 = response1Deferred.await()
                 val response2 = response2Deferred.await()
@@ -594,6 +700,7 @@ class HomeFragment : Fragment() {
                 val response5 = response5Deferred.await()
                 val response6 = response6Deferred.await()
 
+                hideLoaderShowRecycler()
 
                 // Преобразуем JSON в списки уроков
                 val lessonsType = object : TypeToken<List<Lesson>>() {}.type
@@ -604,8 +711,15 @@ class HomeFragment : Fragment() {
                 val lessons5: List<Lesson> = Gson().fromJson(response5.body?.string(), lessonsType)
                 val lessons6: List<Lesson> = Gson().fromJson(response6.body?.string(), lessonsType)
 
+                val date1ForView = dateFromApiToViewInNameOfDay(date1)
+                val date2ForView = dateFromApiToViewInNameOfDay(date2)
+                val date3ForView = dateFromApiToViewInNameOfDay(date3)
+                val date4ForView = dateFromApiToViewInNameOfDay(date4)
+                val date5ForView = dateFromApiToViewInNameOfDay(date5)
+                val date6ForView = dateFromApiToViewInNameOfDay(date6)
+
                 // Список дней недели
-                val weekDays = listOf("Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота")
+                val weekDays = listOf("Понедельник, $date1ForView", "Вторник, $date2ForView", "Среда, $date3ForView", "Четверг, $date4ForView", "Пятница, $date5ForView", "Суббота, $date6ForView")
 
                 // Формируем расписание для каждого дня
                 val daySchedules = mutableListOf<DaySchedule>()
@@ -637,6 +751,19 @@ class HomeFragment : Fragment() {
         }
     }
 
+    //Функция для того чтобы из dd_MM_yyyy String сделать d MMMM
+    fun dateFromApiToViewInNameOfDay(inputDate: String): String {
+        val inputFormatter = DateTimeFormatter.ofPattern("dd_MM_yyyy", Locale.getDefault())
+        val outputFormatter = DateTimeFormatter.ofPattern("d MMMM", Locale("ru"))
+
+        val date = LocalDate.parse(inputDate, inputFormatter)
+        val formattedDate = date.format(outputFormatter)
+        return if (formattedDate != null) {
+            formattedDate
+        } else {
+            inputDate
+        }
+    }
 
     override fun onDestroyView() {
         super.onDestroyView()

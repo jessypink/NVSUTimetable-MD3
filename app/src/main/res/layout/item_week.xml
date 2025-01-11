@@ -1,57 +1,96 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/ItemLayout"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="16dp"
-    android:background="?android:attr/selectableItemBackground"
-    android:layout_marginBottom="8dp">
+    android:paddingBottom="16dp">
 
-    <!-- Дисциплина -->
-    <TextView
-        android:id="@+id/tv_discipline"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="4dp"
-        android:text="Дисциплина"
-        android:textSize="18sp" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal">
 
-    <!-- Преподаватель -->
-    <TextView
-        android:id="@+id/tv_teacher"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Преподаватель"
-        android:textSize="16sp"
-        android:textColor="#757575"
-        android:layout_marginBottom="4dp"/>
+        <LinearLayout
+            android:id="@+id/timeHolder"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginRight="9dp"
+            android:gravity="center_vertical"
+            android:orientation="vertical"
+            android:padding="4dp"
+            android:paddingStart="0dp"
+            android:paddingEnd="8dp"
+            tools:ignore="ExtraText"> <!-- Центрирование по вертикали для всего содержимого -->
 
-    <!-- Дата -->
-    <TextView
-        android:id="@+id/tv_date"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Дата"
-        android:textSize="14sp"
-        android:textColor="#757575"
-        android:layout_marginBottom="4dp"/>
+            <TextView
+                android:id="@+id/tv_time"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="Начало" />
 
-    <!-- Время -->
-    <TextView
-        android:id="@+id/tv_time"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Время"
-        android:textSize="14sp"
-        android:textColor="#757575"/>
+            <TextView
+                android:id="@+id/tv_time_end"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="Конец" /> <!-- Красный фон с закругленными краями -->
+        </LinearLayout>
 
-    <!-- Аудитория -->
-    <TextView
-        android:id="@+id/tv_aud"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Аудитория"
-        android:textSize="14sp"
-        android:textColor="#757575"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
 
-</LinearLayout>
+            <TextView
+                android:id="@+id/tv_discipline"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/NameTextView"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tv_type"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/TypeTextView"
+                android:textSize="14sp" />
+
+            <com.google.android.flexbox.FlexboxLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:flexWrap="wrap"
+                app:justifyContent="flex_start">
+
+                <TextView
+                    android:id="@+id/tv_subgroup"
+                    style="@style/PseudoChips"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:maxLines="1"
+                    android:text="Подгрупа" />
+
+                <TextView
+                    android:id="@+id/tv_aud"
+                    style="@style/PseudoChips"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:maxLines="1"
+                    android:text="кабинет - корпус" />
+
+                <TextView
+                    android:id="@+id/tv_teacher"
+                    style="@style/PseudoChips"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:maxLines="1"
+                    android:text="Фамилия И. О." />
+            </com.google.android.flexbox.FlexboxLayout>
+
+        </LinearLayout>
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

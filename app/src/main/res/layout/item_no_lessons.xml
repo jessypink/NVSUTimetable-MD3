@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:paddingBottom="16dp">
 
     <TextView
         android:id="@+id/tv_day_no_lessons"
@@ -20,5 +20,12 @@
         android:layout_height="wrap_content"
         android:text="Занятий нет"
         android:textSize="16sp"
-        android:textColor="#757575" />
+        android:textColor="#757575"
+        android:layout_marginBottom="16dp" />
+
+    <View
+        android:id="@+id/divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="?android:attr/listDivider" />
 </LinearLayout>
