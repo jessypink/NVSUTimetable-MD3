@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <style name="PseudoChips">
         <item name="android:background">@drawable/rounded_background_attrs</item>
         <item name="android:paddingLeft">10dp</item>
@@ -9,6 +10,7 @@
         <item name="android:layout_marginRight">4dp</item>
         <item name="android:layout_marginTop">4dp</item>
     </style>
+
     <style name="GroupSearch">
         <item name="android:background">@drawable/rounded_background_search</item>
         <item name="android:paddingLeft">13dp</item>
@@ -16,4 +18,5 @@
         <item name="android:paddingTop">5dp</item>
         <item name="android:paddingBottom">5dp</item>
     </style>
+
 </resources>

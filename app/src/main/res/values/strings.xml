@@ -7,4 +7,7 @@
     <string name="TypeTextView">Тип занятия</string>
     <string name="NameTextView">Название дисциплины</string>
     <string name="Prefences_WeekView">Включить просмотр расписания сразу на неделю вместо одного дня. для этого достаточно просто выбрать любой день в неделе, для которой хотите просмотреть расписание.</string>
+    <string name="Navigation_Setting">Включить управление жестами для перехода на следующий или предыдущий день или, если выбрано представление на просмотр недельного расписания, на предыдущую или следующую неделю.</string>
+    <string name="Navigation_Setting_Title">Управление жестами</string>
+    <string name="WeekView_Setting_Title">Просмотр на неделю</string>
 </resources>

@@ -1,6 +1,7 @@
 package com.spvcxzzzz.nvsutimetable.ui.home
 
 import android.annotation.SuppressLint
+import android.app.Dialog
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
@@ -22,6 +23,7 @@ import com.google.gson.reflect.TypeToken
 import com.spvcxzzzz.nvsutimetable.R
 import com.spvcxzzzz.nvsutimetable.databinding.FragmentTimetableBinding
 import com.spvcxzzzz.nvsutimetable.model.Timetable
+import com.spvcxzzzz.nvsutimetable.ui.FirstLaunchDialogFragment
 import kotlinx.coroutines.*
 import okhttp3.*
 import java.io.IOException
@@ -31,8 +33,12 @@ import java.time.ZoneId
 import java.util.*
 import android.view.GestureDetector
 import android.view.MotionEvent
+import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.core.view.updatePadding
+import androidx.fragment.app.DialogFragment
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.appbar.AppBarLayout
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.search.SearchBar
 import com.spvcxzzzz.nvsutimetable.model.DaySchedule
 import com.spvcxzzzz.nvsutimetable.model.Lesson
@@ -87,12 +93,22 @@ class HomeFragment : Fragment() {
         }
 
         var isWeekTimetableView = sharedPreferences.getBoolean("week_timetable_view", false)
+        var isGestureControl = sharedPreferences.getBoolean("gesture_control", false)
 
         if (!sharedPreferences.contains("week_timetable_view")) {
             // Если ключ еще не существует
-            val sharedPreferences1 = requireContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
             with(sharedPreferences.edit()) {
                 putBoolean("week_timetable_view", false)
+                apply()
+            }
+            val dialog = FirstLaunchDialogFragment()
+            dialog.show(parentFragmentManager, "FirstLaunchDialog")
+        }
+
+        if (!sharedPreferences.contains("gesture_control")) {
+            // Если ключ еще не существует
+            with(sharedPreferences.edit()) {
+                putBoolean("gesture_control", true)
                 apply()
             }
         }
@@ -162,15 +178,53 @@ class HomeFragment : Fragment() {
             }
         })
 
-        binding.constraintLayout.setOnTouchListener { _, event ->
-            gestureDetector.onTouchEvent(event)
-            true
+        if (sharedPreferences.getBoolean("gesture_control", false) == true) {
+            //отключаем слушатели тапов по краям и включаем слушатели жестов
+            binding.constraintLayout.setOnTouchListener { _, event ->
+                gestureDetector.onTouchEvent(event)
+                true
+            }
+            binding.recyclerView.setOnTouchListener { _, event ->
+                gestureDetector.onTouchEvent(event)
+                true
+            }
+            binding.leftTapLayout.setOnClickListener(null)
+            binding.rightTapLayout.setOnClickListener(null)
+        } else {
+            //отключаем слушатели жестов и включаем слушатели тапов по краям
+            binding.constraintLayout.setOnTouchListener(null)
+            binding.recyclerView.setOnTouchListener(null)
+            binding.leftTapLayout.setOnClickListener() {
+                if (sharedPreferences.getBoolean("week_timetable_view", false) == true) {
+                    changeWeek(2)
+                } else {
+                    changeDate(-1) // Уменьшаем дату
+                }
+            }
+            binding.rightTapLayout.setOnClickListener() {
+                if (sharedPreferences.getBoolean("week_timetable_view", false) == true) {
+                    changeWeek(1)
+                } else {
+                    changeDate(1)
+                }
+            }
         }
 
-        binding.recyclerView.setOnTouchListener { _, event ->
-            gestureDetector.onTouchEvent(event)
-            true
+        val bottomNavigationView: BottomNavigationView? = view?.findViewById(R.id.nav_view)
+        bottomNavigationView?.let { navView ->
+            binding.recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                    if (dy > 0) {
+                        // Прокрутка вниз: скрыть BottomNavigationView
+                        navView.animate().translationY(navView.height.toFloat()).start()
+                    } else if (dy < 0) {
+                        // Прокрутка вверх: показать BottomNavigationView
+                        navView.animate().translationY(0f).start()
+                    }
+                }
+            })
         }
+
 
         return binding.root
     }
@@ -228,6 +282,7 @@ class HomeFragment : Fragment() {
             }
         }
     }
+
 
     private fun changeDate(dayOffset: Int) {
         // Форматируем строку в объект Date

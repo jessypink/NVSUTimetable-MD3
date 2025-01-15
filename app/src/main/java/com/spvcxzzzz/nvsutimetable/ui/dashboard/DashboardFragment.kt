@@ -33,21 +33,38 @@ class DashboardFragment : Fragment() {
         initClickListeners()
 
         // Включение свичей
-        isWeekViewPrefs()
+        checkEnabledSwitchesFromPrefs()
 
-        binding.weekViewCheckBox.isChecked
+        binding.weekViewSettingSwitch.isChecked
 
         return root
     }
 
     private fun initClickListeners() {
-        //2 чекбокса настройки просмотра недели
+        //2 clickListener настройки просмотра недели
         binding.weekViewConstraintLayout.setOnClickListener {
-            binding.weekViewCheckBox.isChecked = !binding.weekViewCheckBox.isChecked
-            saveWeekViewToPrefs(binding.weekViewCheckBox.isChecked)
+            binding.weekViewSettingSwitch.isChecked = !binding.weekViewSettingSwitch.isChecked
+            saveWeekViewToPrefs(binding.weekViewSettingSwitch.isChecked)
         }
-        binding.weekViewCheckBox.setOnCheckedChangeListener { _, isChecked ->
+        binding.weekViewSettingSwitch.setOnCheckedChangeListener { _, isChecked ->
             saveWeekViewToPrefs(isChecked)
+        }
+
+        //2 clickListener настройки управления жестами
+        binding.gestureControlConstraintLayout.setOnClickListener {
+            binding.gestureSettingSwitch.isChecked = !binding.gestureSettingSwitch.isChecked
+            saveGestureControlToPrefs(binding.weekViewSettingSwitch.isChecked)
+        }
+        binding.gestureSettingSwitch.setOnCheckedChangeListener { _, isChecked ->
+            saveGestureControlToPrefs(isChecked)
+        }
+    }
+
+    private fun saveGestureControlToPrefs(isChecked: Boolean) {
+        val sharedPreferences = requireContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        with(sharedPreferences.edit()) {
+            putBoolean("gesture_control", isChecked)
+            apply()
         }
     }
 
@@ -59,9 +76,10 @@ class DashboardFragment : Fragment() {
         }
     }
 
-    private fun isWeekViewPrefs() {
+    private fun checkEnabledSwitchesFromPrefs() {
         val sharedPreferences = requireContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-        binding.weekViewCheckBox.isChecked = sharedPreferences.getBoolean("week_timetable_view", false)
+        binding.weekViewSettingSwitch.isChecked = sharedPreferences.getBoolean("week_timetable_view", false)
+        binding.gestureSettingSwitch.isChecked = sharedPreferences.getBoolean("gesture_control", true)
     }
 
     override fun onDestroyView() {
